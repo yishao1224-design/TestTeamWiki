@@ -25,3 +25,4 @@ One row per project. Agents read this table to find a project's OKF bundle in th
 | Project | Repo | Summary | Owner | Bundle |
 |---|---|---|---|---|
 | dsh-okf-plugin | https://github.com/yishao1224-design/dsh-okf-plugin | — | yishao | `dsh-okf-plugin/` |
+| english_shadow | https://github.com/yishao1224-design/superagent-playground | — | yishao | `english-shadow/` |
