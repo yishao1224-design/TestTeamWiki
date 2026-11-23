@@ -6,7 +6,7 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-20
+updated: 2026-11-21
 tags: []
 sources:
   - resource: /sources/2026-11-20-okf-py-toolchain.md
@@ -21,15 +21,15 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/templates/hub/scripts/okf.py
     id: okf-src
     title: templates/hub/scripts/okf.py
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/templates/hub/README.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/templates/hub/README.md
     id: hub-readme
     title: templates/hub/README.md
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/team.ts
     id: team
     title: src/host/team.ts
 generated:
   by: dsh/agent
-  at: 2026-11-20
+  at: 2026-11-21
 ---
 
 # The OKF Toolchain (okf.py) and the Hub Template
@@ -98,7 +98,7 @@ New project wiki runs `init` then `index` for the new folder and then removes wh
 
 ## The hub skeleton
 
-`Set up the hub` copies `templates/hub/` into a fresh repository on the base branch and adds three single files from the package [readme][team]:
+`Set up the hub` copies `templates/hub/` into a fresh repository on the base branch and adds the checker and the three example workflows from the package [readme][team]:
 
 | Path in the hub | Source |
 |---|---|
@@ -108,9 +108,10 @@ New project wiki runs `init` then `index` for the new folder and then removes wh
 | `published/Projects/` | `templates/hub/published/Projects/.gitkeep` |
 | `.github/wiki/check-pr.js` | `lib/check-pr.js` |
 | `.github/wiki/workflows/wiki-auto-merge.yml` | `examples/wiki-auto-merge.yml` |
+| `.github/wiki/workflows/wiki-auto-complete-ado.yml` | `examples/wiki-auto-complete-ado.yml` |
 | `.github/wiki/workflows/wiki-publish-to-ado.yml` | `examples/wiki-publish-to-ado.yml` |
 
-The workflows deliberately sit in `.github/wiki/workflows/` rather than `.github/workflows/`, so the very first push needs no `workflow` token scope; the template README explains how to move them into place and what to enable ("Allow auto-merge", branch protection, `vars.ADO_WIKI_*`, `secrets.ADO_WIKI_PAT`) [hub-readme][readme].
+The workflows deliberately sit in `.github/wiki/workflows/` rather than `.github/workflows/`, so the very first push needs no `workflow` token scope; the template README explains how to move them into place — or, for a hub in Azure Repos, how to add `wiki-auto-complete-ado.yml` as a pipeline — and what to enable ("Allow auto-merge", branch protection, a required Build validation with "Contribute to pull requests" for its Build Service account, `vars.ADO_WIKI_*`, `secrets.ADO_WIKI_PAT`) [hub-readme][readme].
 
 ## Related pages
 

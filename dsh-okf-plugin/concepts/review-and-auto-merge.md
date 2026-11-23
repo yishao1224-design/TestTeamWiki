@@ -6,18 +6,21 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-20
+updated: 2026-11-21
 tags: []
 sources:
-  - resource: /sources/2026-11-20-readme.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/README.md
     id: readme
-    title: README at 95b0615
+    title: README.md
   - resource: /sources/2026-11-20-hub-agents-template.md
     id: hub-agents
     title: templates/hub/AGENTS.md capture
   - resource: /sources/2026-11-20-wiki-auto-merge-workflow.md
     id: ci-auto-merge
     title: examples/wiki-auto-merge.yml capture
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/examples/wiki-auto-complete-ado.yml
+    id: ci-ado-auto-complete
+    title: examples/wiki-auto-complete-ado.yml
   - resource: /sources/2026-11-20-okf-py-toolchain.md
     id: okf-py
     title: okf.py key regions
@@ -27,7 +30,7 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/eligibility.ts
     id: eligibility
     title: src/host/eligibility.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/check-pr.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/check-pr.ts
     id: check-pr
     title: src/check-pr.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/summary.ts
@@ -38,7 +41,7 @@ sources:
     title: src/host/registry.ts
 generated:
   by: dsh/agent
-  at: 2026-11-20
+  at: 2026-11-21
 ---
 
 # Review State and Auto-Merge
@@ -92,7 +95,7 @@ The Team Wiki service calls this in two places: Open pull request resets any rev
 | a page that claims a human review after the change | needs a person — only a person may stamp `verified` |
 | an existing capture that is modified or deleted | needs a person — captures are immutable |
 
-An empty change is also a reason. The same function backs the Host (`pulls()` and `openPr()`) and `lib/check-pr.js`, so the label the plugin sets and the verdict CI computes come from one implementation [eligibility][readme].
+An empty change is also a reason. The same function backs the Host (`pulls()` and `openPr()`), `lib/check-pr.js` and both CI guards below, so the label (or tag) the plugin sets and the verdict CI computes come from one implementation [eligibility][readme].
 
 ## The CI checker
 
@@ -109,7 +112,7 @@ It diffs `merge-base(base, head)..head` with `git diff --name-status --no-rename
 - a PR adding a `…/SCHEMA.md` maps that new folder to the PR;
 - without a registry, the folder directly under the wiki root that holds a `SCHEMA.md`, or the root itself when it is a bundle.
 
-Exit codes: `0` eligible, `1` needs a person (reasons printed), `2` usage or git error. It prints `project wiki: <folder>` and one line per page with its review state before and after, and when `GITHUB_OUTPUT` is set it writes `wiki=<folder>` there so the workflow can lint exactly that bundle [check-pr].
+Exit codes: `0` eligible, `1` needs a person (reasons printed), `2` usage or git error. It prints `project wiki: <folder>` and one line per page with its review state before and after, and when `GITHUB_OUTPUT` is set it writes `wiki=<folder>` there so the workflow can lint exactly that bundle; on Azure Pipelines (`TF_BUILD=True`) it prints the same value as a task output variable, `##vso[task.setvariable variable=wiki;isOutput=true]`, which the Azure guard reads as `$(check.wiki)` [check-pr].
 
 The workflow takes the checker and the linter **from the base branch**, so a PR cannot weaken the rules that judge it, and only then enables GitHub auto-merge [ci-auto-merge]:
 
@@ -121,7 +124,16 @@ python scripts/okf.py lint --bundle "${{ steps.check.outputs.wiki }}"
 gh pr merge --auto --squash …
 ```
 
-The workflow only runs when the `wiki-auto-merge` label is present, so an ineligible PR is never considered; the label is a hint, not the decision [ci-auto-merge].
+The GitHub workflow only runs when the `wiki-auto-merge` label is present, so an ineligible PR is never considered; the label is a hint, not the decision [ci-auto-merge].
+
+### The Azure DevOps guard
+
+`examples/wiki-auto-complete-ado.yml` is the same guard for a hub in Azure Repos, added as a pipeline and made a required **Build validation** policy on the base branch [ci-ado-auto-complete]. It fetches the base branch, runs the base branch's `.github/wiki/check-pr.js`, and publishes an `eligible` output:
+
+- **eligible:** it lints `$(check.wiki)` with the base branch's `scripts/okf.py`; a lint failure fails the run, which blocks completion;
+- **needs a person:** it PATCHes the pull request's `autoCompleteSetBy` to the all-zero id with `System.AccessToken`, turning auto-complete off; the run still succeeds, so a reviewer completes it by hand.
+
+Auto-complete itself is not set by the pipeline: the Host turns it on (squash, delete the source branch) when it judges the change eligible. The pipeline is the independent re-check, and a **Require a minimum number of reviewers** policy also holds auto-complete back. The Build Service account needs "Contribute to pull requests" to turn auto-complete off [readme][ci-ado-auto-complete].
 
 ## Companion: lint
 
@@ -134,5 +146,6 @@ Eligibility says what a person must see; `okf.py lint` says whether the bundle i
 ## Related pages
 
 - [Team Wiki service](/concepts/team-wiki-service.md) — where `judge()` and the stamp are applied.
+- [Azure DevOps hubs and pull requests](/concepts/azure-devops-pull-requests.md) — auto-complete and the Azure build-validation guard.
 - [Data model](/concepts/data-model.md) — the `verified` / `generated` field shapes.
 - [Conventions, pitfalls and open questions](/concepts/conventions-and-pitfalls.md) — date-granularity and other edge cases.

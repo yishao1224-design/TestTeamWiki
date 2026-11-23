@@ -6,15 +6,15 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-20
+updated: 2026-11-21
 tags: []
 sources:
   - resource: /sources/2026-11-20-readme.md
     id: readme
     title: README at 95b0615
-  - resource: /sources/2026-11-20-package-manifest.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/package.json
     id: manifest
-    title: package.json capture
+    title: package.json
   - resource: /sources/2026-11-20-build-script.md
     id: build
     title: build.mjs capture
@@ -27,9 +27,12 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/scripts/team-smoke.mjs
     id: team-smoke
     title: scripts/team-smoke.mjs
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/scripts/hub-smoke.mjs
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/scripts/hub-smoke.mjs
     id: hub-smoke
     title: scripts/hub-smoke.mjs
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/scripts/ado-smoke.mjs
+    id: ado-smoke
+    title: scripts/ado-smoke.mjs
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/scripts/harness-check.mjs
     id: harness-check
     title: scripts/harness-check.mjs
@@ -38,7 +41,7 @@ sources:
     title: scripts/preview-server.mjs
 generated:
   by: dsh/agent
-  at: 2026-11-20
+  at: 2026-11-21
 ---
 
 # Build, Run, Test and Deploy
@@ -77,13 +80,14 @@ npm run build         # node build.mjs -> lib/index.js, lib/check-pr.js, lib/cli
 npm run smoke
 ```
 
-That is `node scripts/smoke.mjs && node scripts/team-smoke.mjs && node scripts/hub-smoke.mjs` [manifest].
+That is `node scripts/smoke.mjs && node scripts/team-smoke.mjs && node scripts/hub-smoke.mjs && node scripts/ado-smoke.mjs` [manifest].
 
 | Script | Needs | Covers |
 |---|---|---|
 | `scripts/smoke.mjs` | `git` only — no Harness, no browser, no network | Two throwaway `file://` remotes; the built Host routes (fetch, auto-detect, many-bundles, duplicate id, refused URL/ref/path, preview, traversal refusal, update clean/dirty/forced, add-local, remove); the prompt context incl. subagent inheritance; that no tools are registered; the built browser artifact rendered with `react-dom/server` and the markdown safety rules [smoke][readme] |
 | `scripts/team-smoke.mjs` | a knowledgeAgent checkout (`WIKI_FIXTURE`, else `../knowledgeAgent`) and Python | A bare repo behind a GitHub URL via `url.<file>.insteadOf` plus a stand-in GitHub API: connect, review counts, Preview, Maintain and reuse, team rules in the prompt, Open pull request (eligible, then a reviewed page reset, then a lint failure that commits nothing), the PR list, `lib/check-pr.js`, New project wiki, merge-closes-workspace [team-smoke][readme] |
-| `scripts/hub-smoke.mjs` | the same fixture | The hub layout on GitHub Enterprise (`github.acme.com`, API under `/api/v3`): registry-driven list, eligible page, `published/` needing a person, New project wiki adding a registry row, Publish, and `check-pr.js` mapping each case [hub-smoke][readme] |
+| `scripts/hub-smoke.mjs` | the same fixture | The hub layout on GitHub Enterprise (`github.acme.com`, API under `/api/v3`): registry-driven list, eligible page, `published/` needing a person, New project wiki adding a registry row, the first Sync from code reading the code through, a setup pull request opened later from its pending card, Publish, and `check-pr.js` mapping each case [hub-smoke][readme] |
+| `scripts/ado-smoke.mjs` | the same fixture plus a fake Azure DevOps API | The pull request side on Azure Repos (`https://dev.azure.com/acme/Wiki/_git/team-wiki`): connect, Maintain, an eligible pull request tagged and auto-complete on (squash), pull requests listed from the source branch with the latest status per context, a reviewed page edited (tag and auto-complete off, title kept), Mark reviewed with the PAT's account, and a completed pull request closing the workspace and moving the base clone; every call is checked for the PAT and `api-version=7.1` [ado-smoke][readme] |
 
 Two checks are outside `npm run smoke`:
 
@@ -116,12 +120,13 @@ This needs Full access or approval because Host code runs in the Harness process
 
 "Deploy" for this package means: rebuild, reinstall, restart. The artifacts are the committed `lib/*.js` files plus `templates/hub`, `examples/*.yml`, `cordis.patch.yml` and `README.md` — the `files` list in `package.json` [manifest]. Nothing else is published.
 
-For the **hub repository** (a different deployment), two workflows have to be enabled by hand in the hub, because `Set up the hub` writes them under `.github/wiki/` so the first push needs no `workflow` scope [readme]:
+For the **hub repository** (a different deployment), three example workflows have to be enabled by hand in the hub, because `Set up the hub` writes them under `.github/wiki/` so the first push needs no `workflow` scope [readme]:
 
-1. move `.github/wiki/workflows/wiki-auto-merge.yml` to `.github/workflows/`, enable "Allow auto-merge" in the repository settings, and require the `wiki-check` job in branch protection;
-2. move `.github/wiki/workflows/wiki-publish-to-ado.yml` to `.github/workflows/`, after setting `vars.ADO_WIKI_REPO`, optionally `vars.ADO_WIKI_BRANCH` (default `wikiMaster`) and `secrets.ADO_WIKI_PAT` (Code read & write on the wiki repository).
+1. on **GitHub**, move `.github/wiki/workflows/wiki-auto-merge.yml` to `.github/workflows/`, enable "Allow auto-merge" in the repository settings, and require the `wiki-check` job in branch protection;
+2. on **Azure Repos**, add `.github/wiki/workflows/wiki-auto-complete-ado.yml` as a pipeline and make it a required Build validation policy on the base branch — the Host turns Azure DevOps auto-complete on itself, and this pipeline re-checks the change and turns it off again when the change needs a person; give the project's Build Service account "Contribute to pull requests" so it can;
+3. move `.github/wiki/workflows/wiki-publish-to-ado.yml` to `.github/workflows/`, after setting `vars.ADO_WIKI_REPO`, optionally `vars.ADO_WIKI_BRANCH` (default `wikiMaster`) and `secrets.ADO_WIKI_PAT` (Code read & write on the wiki repository).
 
-The auto-merge workflow also expects `.github/wiki/check-pr.js`, which `Set up the hub` copies from `lib/check-pr.js` [readme].
+Both guards take the checker and the linter **from the base branch**, so a pull request cannot weaken the rules that judge it. They also expect `.github/wiki/check-pr.js`, which `Set up the hub` copies from `lib/check-pr.js` [readme].
 
 ## Running the toolchain by hand
 

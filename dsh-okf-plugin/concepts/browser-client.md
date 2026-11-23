@@ -6,7 +6,7 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-20
+updated: 2026-11-21
 tags: []
 sources:
   - resource: /sources/2026-11-20-readme.md
@@ -24,7 +24,7 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/client/components.tsx
     id: components
     title: src/client/components.tsx
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/client/team.tsx
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/client/team.tsx
     id: team-tsx
     title: src/client/team.tsx
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/client/markdown.tsx
@@ -33,7 +33,7 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/client/styles.ts
     id: styles
     title: src/client/styles.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/client/locales.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/client/locales.ts
     id: locales
     title: src/client/locales.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/types/contract.ts
@@ -41,7 +41,7 @@ sources:
     title: src/types/contract.ts
 generated:
   by: dsh/agent
-  at: 2026-11-20
+  at: 2026-11-21
 ---
 
 # The Browser Client
@@ -82,7 +82,9 @@ Mutation methods mirror the routes: `fetchBundle`, `addLocal`, `update`, `remove
 - `Catalog` — a client-side filter over title, path, description, tags, type and lifecycle, grouped by top folder with root files first.
 - `PageView` — frontmatter in a `<details>` table, then the rendered body.
 
-`team.tsx` holds the Team Wiki page: header with Refresh / Change repository / New project wiki, the two tabs (Project wikis, Local library), the project list with review counts and a "Being maintained" / "Code updated" badge, the detail pane (stats, actions Maintain / Initialize / Sync from code / Publish / Preview, tabs for pull requests, pages and needs-review), the connect form, the empty-hub set-up panel, the New project wiki modal, the maintenance-session Open pull request button and its dialog [team-tsx]. The page also polls `loadPulls` every three minutes and on window focus while a workspace has an open pull request, so a merge made on GitHub is noticed without a manual refresh [team-tsx].
+`team.tsx` holds the Team Wiki page: header with Refresh / Change repository / New project wiki, the two tabs (Project wikis, Local library), the project list with review counts and a "Being maintained" / "Code updated" badge, the detail pane (stats, actions Maintain / Sync from code / Publish / Preview, tabs for pull requests, pages and needs-review), the connect form, the empty-hub set-up panel, the New project wiki modal (including its Initialize-from-code checkbox), the maintenance-session Open pull request button and its dialog [team-tsx]. Sync from code is the one code button: it does the read-through on the first round and updates the affected pages afterwards, so the detail pane has no separate Initialize action [team-tsx].
+
+A new project wiki that is not on the base branch yet — a `MaintainRecord` with `isNew` whose folder is still absent from `data.wikis`, i.e. its setup pull request has not merged — appears as a `PendingCard` instead of a project entry. The card shows its PR link, offers **Open workspace** (the same `maintainWiki` call, which reaches the pending record through `openRound`), and, when the first attempt to open the setup PR failed — for example because no token was set yet — shows a primary **Open pull request** button that opens the PR dialog for that record [team-tsx]. The page also polls `loadPulls` every three minutes and on window focus while a workspace has an open pull request, so a merge made on the host is noticed without a manual refresh [team-tsx]. The same page serves a hub in Azure Repos: it shows a provider-specific token warning (`DSH_OKF_AZURE_TOKEN` with a Code: Read & Write PAT, instead of the GitHub token), lists pull requests for GitHub and Azure DevOps hubs only, and its per-PR external link is worded "Review pull request" on either host [team-tsx][locales].
 
 ## Markdown rendering is a security boundary
 

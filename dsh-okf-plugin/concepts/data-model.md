@@ -6,7 +6,7 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-20
+updated: 2026-11-21
 tags: []
 sources:
   - resource: /sources/2026-11-20-readme.md
@@ -24,7 +24,7 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/library.ts
     id: library
     title: src/host/library.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/team.ts
     id: team
     title: src/host/team.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/bundle.ts
@@ -38,7 +38,7 @@ sources:
     title: src/host/codesync.ts
 generated:
   by: dsh/agent
-  at: 2026-11-20
+  at: 2026-11-21
 ---
 
 # Data Model and Entities
@@ -197,7 +197,7 @@ library.json ──entry.id──▶ repos/<id>/ (git)      │
 team.json ──team──▶ hub repository
      ├─maintains[i].wiki ──▶ the same project wiki folder
      │     ├─workspace ──▶ work/<slug>/  ──▶ .code/<slug>/ (read-only code)
-     │     └─pr ──▶ GitHub pull request ──▶ branch wiki/…
+     │     └─pr ──▶ GitHub or Azure DevOps pull request ──▶ branch wiki/…
      └─code[folder].head ──▶ the code repository's HEAD as last seen
 ```
 
