@@ -6,7 +6,7 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-21
+updated: 2026-11-23
 tags: []
 sources:
   - resource: /sources/2026-11-20-readme.md
@@ -24,7 +24,7 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/library.ts
     id: library
     title: src/host/library.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/team.ts
     id: team
     title: src/host/team.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/bundle.ts
@@ -33,12 +33,12 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/review.ts
     id: review
     title: src/host/review.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/codesync.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/codesync.ts
     id: codesync
     title: src/host/codesync.ts
 generated:
   by: dsh/agent
-  at: 2026-11-21
+  at: 2026-11-23
 ---
 
 # Data Model and Entities
@@ -56,7 +56,7 @@ A folder holding a `SCHEMA.md`, or an `index.md` whose frontmatter declares `okf
 | File | Role |
 |---|---|
 | `index.md` | Catalog; may carry `okf_version` at the bundle root only. Frontmatter below the root is a lint error [okf-py] |
-| `log.md` | Change history, one dated line per change |
+| `log.md` | Change history: one dated line per change; each code sync adds a **Sync** entry carrying `code_commit` |
 | `SCHEMA.md` | Conventions: domain, type registry, frontmatter template, tag taxonomy |
 
 ### Page frontmatter
@@ -87,13 +87,15 @@ There is no stored "reviewed" field. `reviewState` derives it from `lifecycle`, 
 
 ### Hub extension keys
 
-Two keys are this team's additions, both read/written in the project's `SCHEMA.md` and only meaningful in a team wiki [codesync]:
+This team adds one key of its own, plus a code-sync record kept in the log [codesync][team]:
 
-| Key | Meaning |
-|---|---|
-| `code_commit` | The code commit the wiki reflects |
-| `code_synced` | The date it was synced |
-| `wiki_name` | The display name of the project wiki (falls back to the folder name) [team] |
+| Where | Key | Meaning |
+|---|---|---|
+| `log.md` | `code_commit`, inside a dated **Sync** entry — the entry names the repository, the commit, and the commit before it | The code commit the wiki reflects; the newest entry wins, and rotated `archive/log-YYYY.md` files are read too (newest year first) |
+| `SCHEMA.md` | `code_commit`, `code_synced` *(legacy)* | Where syncs used to record the commit and its date. Still read as the baseline when the log has none, and dropped by the next sync |
+| `SCHEMA.md` | `wiki_name` | The display name of the project wiki (falls back to the folder name) [team] |
+
+Recording the commit in `log.md` rather than `SCHEMA.md` is deliberate: `log.md` is an allowed file for the auto-merge rule while `SCHEMA.md` always needs a person, so a sync's own bookkeeping no longer makes its pull request wait [codesync]. See [Sync from code](/concepts/team-wiki-service.md#sync-from-code).
 
 ### The hub registry
 
@@ -187,7 +189,7 @@ The Host and browser share these in `src/types/okf.ts` [types]:
 
 ```text
 AGENTS.md registry row ──(Bundle column)──▶ project wiki folder ──▶ bundle root
-                                                   │        (SCHEMA.md, index.md, pages, sources/)
+                                                   │        (SCHEMA.md, index.md, log.md, pages, sources/)
                                                    │
 library.json ──entry.id──▶ repos/<id>/ (git)      │
      │  └─entry.workspace──▶ DSH Workspace ────────┤
@@ -213,6 +215,7 @@ team.json ──team──▶ hub repository
 | Only a person makes a page reviewed | `reviewState` requires a `human` actor kind; the agent stamp never writes `verified` [review] |
 | Published pages are generated | `renderBundle` is deterministic; the PR always needs a person [readme] |
 | The base branch only changes through a PR | every write goes to a `wiki/…` branch, pushed and opened as a PR [team] |
+| A sync's commit does not by itself need a person | recorded in the bundle's `log.md`, an allowed file for `judge()`, not in `SCHEMA.md` [codesync][team] |
 
 ## Related pages
 

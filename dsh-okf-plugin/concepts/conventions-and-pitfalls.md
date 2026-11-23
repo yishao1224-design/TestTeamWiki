@@ -6,10 +6,10 @@ status: draft
 lifecycle: draft
 confidence: medium
 created: 2026-11-20
-updated: 2026-11-21
+updated: 2026-11-23
 tags: []
 sources:
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/README.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/README.md
     id: readme
     title: README.md
   - resource: /sources/2026-11-20-build-script.md
@@ -27,9 +27,12 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/review.ts
     id: review
     title: src/host/review.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/team.ts
     id: team
     title: src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/tools.ts
+    id: tools
+    title: src/host/tools.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/azure.ts
     id: azure
     title: src/host/azure.ts
@@ -47,7 +50,7 @@ sources:
     title: src/host/knowledge.ts
 generated:
   by: dsh/agent
-  at: 2026-11-21
+  at: 2026-11-23
 ---
 
 # Conventions, Pitfalls and Open Questions
@@ -76,6 +79,8 @@ generated:
 
 **The team rules are prompt-level.** A maintenance session's context tells the agent to write unreviewed drafts, never write `verified` entries or claim a person as the reviewer, never edit an existing capture, never change `SCHEMA.md` unless asked, never touch `published/` or `AGENTS.md`, treat `.code/` as read-only, and not to commit [readme][knowledge].
 
+**Model tools are thin wrappers.** The only tools the Host adds are `wiki_sync_from_code` and `wiki_open_pr`; both validate their own arguments and then call the `Team` service (`sync`, `openPr`, `wikiAt`), so the page and an automation task run the same code. Reading bundles stays with the Harness's own `read`/`grep`/`glob` [team][tools].
+
 ## Pitfalls
 
 - **A source change without `npm run build` changes nothing.** `lib/` is committed and the smoke tests import the built artifacts, not `src/` [readme].
@@ -97,6 +102,9 @@ generated:
 - **`scripts/okf.py` must exist in the hub** for a PR to be linted and logged; without it the branch is still pushed but the PR is marked as needing a person [team].
 - **`okf.py init` writes outside the new folder** (it re-syncs skill copies), so New project wiki reverts everything outside the wiki folder — and swallows a revert failure [team].
 - **The `.code/` checkout is excluded through `.git/info/exclude`,** not `.gitignore`, so it never appears as a change; a reused clone is only reused when its `remote.origin.url` still matches [team].
+- **The Team Wiki tools are global, not per bundle.** They are registered for every session (unless `tools: false`), so they appear even where no team wiki is connected; a call then fails saying to connect one, and they only ever act on the hub's project wikis [readme][tools].
+- **A legacy `code_commit` in `SCHEMA.md` costs one person.** A wiki synced before the log entry existed is read from `SCHEMA.md`, and the next sync drops those keys, which by itself makes that pull request need a person; later syncs change only `log.md` and stay eligible for auto-merge [readme][team].
+- **A delivered reminder is not a finished run.** DSH queues the reminder into the session and returns; the run's completion is the pull request, so check the Team Wiki list rather than the automation task's log. Reminders also run only while DSH is running, and after a restart only the latest missed one fires [readme].
 - **New project wiki's client fallback is `root ?? 'okf'`** while the Host's default `team.root` is `''` (the repository root) [team-tsx]. With the current types `root` is always a string, so this is latent, but a future `undefined` would silently put new wikis under `okf/`.
 
 ## Open questions
@@ -110,9 +118,10 @@ These are the authors' own "not verified yet" items plus what this survey found 
 5. **The chip's placement.** DSH does not render the session-header utilities in a blank session, and the composer row needs a session id — so in a brand-new "New session" view neither button can appear.
 6. **Azure DevOps against a live organization.** URL parsing, the Basic-PAT header and now the pull request side (create/update, tags, statuses, auto-complete) are covered by `ado-smoke.mjs` against a stand-in API written from Microsoft's REST reference, but no real ADO clone, pull request or `wiki-auto-complete-ado.yml` pipeline was run.
 7. **No CI in this repository.** There is no `.github/workflows` here: type-check, build and the four smoke scripts are manual, and nothing checks that the committed `lib/` matches `src/`. The three workflow files under `examples/` are for *hub* repositories, not for this one.
-8. **The vendored contract** was read from DSH 0.2.1-alpha.1; any Harness change to those shapes must be reflected in `src/types/contract.ts`.
+8. **The vendored contract** was read from DSH 0.2.1-alpha.1, with the tool shapes from 0.2.1-rc.2; any Harness change to those shapes must be reflected in `src/types/contract.ts`.
 9. **What counts as a "substantial" change** — the rule that makes an edited page a draft again — is left to the agent's instructions; only the review reset and the eligibility judge are mechanical.
 10. **Cost of the code checkout.** Initialize/Sync clone the code repository with `--filter=blob:none`, which keeps the full history; for a very large repository that is still a sizeable download per maintenance folder.
+11. **The Team Wiki tools from a real automation task.** They were registered and called in DSH 0.2.1-rc.2's real `ToolRuntime`, and ran against a stand-in GitHub Enterprise hub, but a Schedule reminder firing in a live maintenance session, with its permission preset, has not been tried [readme].
 
 ## Related pages
 

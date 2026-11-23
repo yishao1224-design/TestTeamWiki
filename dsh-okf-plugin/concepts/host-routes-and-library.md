@@ -1,12 +1,12 @@
 ---
 type: Concept
 title: Host Routes and the Bundle Library
-description: The Host entry's twenty-three /api/okf routes, error mapping, the library.json store, and the git and bundle-reading modules behind it.
+description: The Host entry's twenty-four /api/okf routes, error mapping, the library.json store, and the git and bundle-reading modules behind it.
 status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-21
+updated: 2026-11-23
 tags: []
 sources:
   - resource: /sources/2026-11-20-readme.md
@@ -15,9 +15,12 @@ sources:
   - resource: /sources/2026-11-20-cordis-patch.md
     id: patch
     title: cordis.patch.yml capture
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/index.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/index.ts
     id: host-entry
     title: src/index.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/tools.ts
+    id: tools
+    title: src/host/tools.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/azure.ts
     id: azure
     title: src/host/azure.ts
@@ -44,14 +47,14 @@ sources:
     title: src/host/run.ts
 generated:
   by: dsh/agent
-  at: 2026-11-21
+  at: 2026-11-23
 ---
 
 # Host Routes and the Bundle Library
 
 ## The entry point
 
-`src/index.ts` is the Host module. It exports `inject = ['connection']` — the only hard dependency — plus `Config` (the row config), `handlers` (exported so the smoke test can call routes directly), and `apply(ctx, config)` [host-entry]. `connection` is what routes are registered on; `systemPrompt` is reached optionally through `ctx.inject`, so the library and preview keep working on a Harness build that does not expose it [host-entry].
+`src/index.ts` is the Host module. It exports `inject = ['connection']` — the only hard dependency — plus `Config` (the row config), `handlers` (exported so the smoke test can call routes directly), and `apply(ctx, config)` [host-entry]. `connection` is what routes are registered on; `systemPrompt` and `tools` are reached optionally through `ctx.inject`, so the library and preview keep working on a Harness build that does not expose them [host-entry].
 
 `Config` keys and their defaults, all optional [host-entry][patch]:
 
@@ -62,13 +65,14 @@ generated:
 | `gitTimeoutMs` | `300000` |
 | `indexChars` | `8000` (0 sends no catalog) |
 | `promptContext` | `true` |
+| `tools` | `true` (registers `wiki_sync_from_code` and `wiki_open_pr`) |
 | `team.*` | see [Team Wiki service](/concepts/team-wiki-service.md) |
 
 A patch replaces the whole `config` block, so a partial config does not merge with a previous one [patch][readme].
 
 ## The routes
 
-Every route is an **exact Fetch route** on `connection.fetch.register` with `requestBody: 'buffered'`, and everything sits under `/api/okf`. The plugin uses `connection.fetch` rather than `connection.rpc`, because under strict injection `rpc.handle` throws for an out-of-tree plugin [host-entry]. There are twenty-three routes; the smoke test asserts that count and the prefix [readme].
+Every route is an **exact Fetch route** on `connection.fetch.register` with `requestBody: 'buffered'`, and everything sits under `/api/okf`. The plugin uses `connection.fetch` rather than `connection.rpc`, because under strict injection `rpc.handle` throws for an out-of-tree plugin [host-entry]. There are twenty-four routes [types]; the smoke test asserts that count and the prefix.
 
 | Route | Method | Purpose |
 |---|---|---|
@@ -92,11 +96,14 @@ Every route is an **exact Fetch route** on `connection.fetch.register` with `req
 | `/api/okf/team/setup` | POST | Set up the hub in an empty repository |
 | `/api/okf/team/initialize` | POST | Check out the code and write the read-through task |
 | `/api/okf/team/sync` | POST | Diff the code since the recorded commit and write the update task |
+| `/api/okf/team/review` | POST | Mark pages reviewed as the token's account (a `verified` entry) |
 | `/api/okf/team/changes` | GET | What a maintenance workspace holds that the base does not |
 | `/api/okf/team/open-pr` | POST | Stamp, lint, commit, push, open or update the pull request |
 | `/api/okf/team/attach` | POST | Add the base-branch wiki to the library, read-only |
 
 `src/types/okf.ts` holds the same table as `ROUTES`, the request and answer records for each route, and `relative()`, which strips the leading slash for the browser's document-relative fetch [types].
+
+Not everything the Host entry registers is a route. Besides the prompt context, `apply()` registers the two Team Wiki model tools `wiki_sync_from_code` and `wiki_open_pr` through `ctx.inject(['tools'], …)` — globally, for every session, unless `config.tools` is `false`. They call the same `Team` service the `/api/okf/team` routes do, and are described in [Automation tasks and the Team Wiki tools](/concepts/automation-tasks.md) [host-entry][tools].
 
 ## Error mapping
 

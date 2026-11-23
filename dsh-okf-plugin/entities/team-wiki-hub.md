@@ -6,10 +6,10 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-21
+updated: 2026-11-23
 tags: []
 sources:
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/README.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/README.md
     id: readme
     title: README.md
   - resource: /sources/2026-11-20-hub-agents-template.md
@@ -32,7 +32,7 @@ sources:
     title: src/host/registry.ts
 generated:
   by: dsh/agent
-  at: 2026-11-21
+  at: 2026-11-23
 ---
 
 # Team Wiki Hub Repository
@@ -80,7 +80,10 @@ A maintenance round clones the hub into `<library>/team/work/<slug>` on a `wiki/
 - **Set up the hub** fills an empty repository with the skeleton, the checker and the three example workflows as the first commit of the base branch; it refuses if the repository has any branch [readme].
 - **New project wiki** scaffolds a bundle with `okf.py init`, writes `wiki_name`, adds the registry row, and opens the setup as the first pull request [readme].
 - **Maintain** and **Sync from code** (whose first round is the Initialize read-through) change it only through `wiki/…` branches [readme].
+- **A scheduled automation task** can run the last two through the Team Wiki model tools — `wiki_sync_from_code`, then `wiki_open_pr` after the pages are updated — so a pull request appears without anyone at the page; a person still reviews it [readme].
 - **Publish** writes `published/Projects/…` into the same pull request, and after a merge the ADO sync workflow mirrors that folder into the Azure DevOps wiki's `Projects/` section [ci-ado].
+
+A code sync records the commit the wiki now reflects in the project's `log.md`, as a dated **Sync** entry, rather than in `SCHEMA.md`. That is what lets a sync's pull request merge on its own when every page it changes is unreviewed; a wiki synced before that change still carries the old `code_commit` in `SCHEMA.md`, and the first sync that drops it needs a person [readme].
 
 ## Related pages
 

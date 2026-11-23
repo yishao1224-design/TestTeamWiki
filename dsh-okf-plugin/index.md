@@ -9,11 +9,12 @@ okf_version: "0.2"
 # Concepts
 
 * [Architecture of the dsh-okf Plugin](concepts/architecture.md) - The two halves of the plugin, the components inside each, how they talk to each other, and where state lives on disk.
+* [Automation Tasks and the Team Wiki Tools](concepts/automation-tasks.md) - The two model tools wiki_sync_from_code and wiki_open_pr that let a DSH automation task keep a project wiki in step with its code, how they pick a wiki, and what they answer.
 * [Azure DevOps Hubs and Pull Requests](concepts/azure-devops-pull-requests.md) - How a hub in Azure Repos gets pull requests, tags, statuses and auto-complete — the shared PullHost shape, the AzureDevOps REST client and the pipeline that guards a merge.
 * [Build, Run, Test and Deploy](concepts/build-run-test-deploy.md) - The exact commands to install, type-check, build, smoke-test, harness-check and preview the plugin, and how it is installed and updated in DSH.
 * [Conventions, Pitfalls and Open Questions](concepts/conventions-and-pitfalls.md) - The coding and workflow conventions this repository follows, the traps a maintainer should know, and what the authors themselves flag as unverified.
 * [Data Model and Entities](concepts/data-model.md) - The records the plugin stores — bundle frontmatter, library.json, team.json, work records and wire DTOs — and the invariants that hold them together.
-* [Host Routes and the Bundle Library](concepts/host-routes-and-library.md) - The Host entry's twenty-three /api/okf routes, error mapping, the library.json store, and the git and bundle-reading modules behind it.
+* [Host Routes and the Bundle Library](concepts/host-routes-and-library.md) - The Host entry's twenty-four /api/okf routes, error mapping, the library.json store, and the git and bundle-reading modules behind it.
 * [Publishing to the Azure DevOps Wiki](concepts/publish-pipeline.md) - How a project bundle is rendered into published/Projects pages for an Azure DevOps wiki, and how a merge mirrors them there.
 * [Review State and Auto-Merge](concepts/review-and-auto-merge.md) - How a page counts as reviewed, how an agent edit resets it, and the eligibility rule that decides whether a wiki pull request may merge without a person.
 * [Team Wiki Service](concepts/team-wiki-service.md) - The team.ts Host service that lists a hub's project wikis, runs maintenance rounds, opens pull requests and bootstraps or syncs wikis from code.

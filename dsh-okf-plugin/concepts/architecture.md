@@ -6,7 +6,7 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-21
+updated: 2026-11-23
 tags: []
 sources:
   - resource: /sources/2026-11-20-readme.md
@@ -18,10 +18,10 @@ sources:
   - resource: /sources/2026-11-20-package-manifest.md
     id: manifest
     title: package.json capture
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/index.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/index.ts
     id: host-entry
     title: src/index.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/types/contract.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/types/contract.ts
     id: contract
     title: src/types/contract.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/types/okf.ts
@@ -30,9 +30,12 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/library.ts
     id: library
     title: src/host/library.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/team.ts
     id: team
     title: src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/tools.ts
+    id: tools
+    title: src/host/tools.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/client/index.ts
     id: client-entry
     title: src/client/index.ts
@@ -41,7 +44,7 @@ sources:
     title: src/client/store.ts
 generated:
   by: dsh/agent
-  at: 2026-11-21
+  at: 2026-11-23
 ---
 
 # Architecture of the dsh-okf Plugin
@@ -65,9 +68,10 @@ The package ships three build artifacts, all produced by `build.mjs` and committ
 1. builds a `Library` over the configured `libraryDir` (default `<DSH home>/okf`),
 2. builds a `Team` service over `<libraryDir>/team`,
 3. registers every handler in its exported `handlers` table as an exact Fetch route under `/api/okf` with a buffered body [host-entry],
-4. registers the prompt context `okf:session-bundle` through `ctx.inject(['systemPrompt'], …)`, so the library and preview still work if a Harness build does not expose that service [host-entry].
+4. registers the prompt context `okf:session-bundle` through `ctx.inject(['systemPrompt'], …)`, so the library and preview still work if a Harness build does not expose that service [host-entry],
+5. registers the two Team Wiki tools through `ctx.inject(['tools'], …)` unless `config.tools` is `false`: `wiki_sync_from_code` and `wiki_open_pr`, built by `wikiTools(team)` [host-entry][tools].
 
-The route table is shared by both halves in `src/types/okf.ts` (`ROUTES`, `relative()`); the browser fetches the document-relative form so the session cookie rides along and the Connection Host/Origin fence applies [types][host-entry].
+The route table is shared by both halves in `src/types/okf.ts` (`ROUTES`, `relative()`); the browser fetches the document-relative form so the session cookie rides along and the Connection Host/Origin fence applies [types][host-entry]. The tools do not go through a route: they are global entries in the Harness's tool registry, registered once for every session, and they reach the same `Team` service the routes do [host-entry][tools].
 
 Host modules and their jobs:
 
@@ -79,6 +83,7 @@ Host modules and their jobs:
 | `host/frontmatter.ts` | A dependency-free YAML-frontmatter reader for flat keys and scalar lists |
 | `host/knowledge.ts` | The per-session prompt context, the `index.md` cache, editing rules |
 | `host/team.ts` | The Team Wiki service: project list, pull requests, Maintain, New project wiki, Open pull request, Sync from code (first round = the Initialize read-through), Set up the hub, Publish |
+| `host/tools.ts` | The model tools `wiki_sync_from_code` and `wiki_open_pr`, so an automation task can run Sync from code and Open pull request without the page; they call `team.sync()`, `team.openPr()` and `team.wikiAt()` |
 | `host/review.ts` | Reviewed / unreviewed from frontmatter; the agent-edit stamp; frontmatter text surgery |
 | `host/eligibility.ts` | The auto-merge rule, shared by the Host and `lib/check-pr.js` |
 | `host/registry.ts` | The hub's `AGENTS.md` project-registry table (parse and append) |
@@ -117,6 +122,7 @@ browser (client.js)                      dsh Host process (index.js)
        │◀──────── JSON { entry | status | … } ──┘
        │
   system prompt ◀── ctx.inject systemPrompt.context('okf:session-bundle')
+  tool registry ◀── ctx.inject tools.register(wiki_sync_from_code, wiki_open_pr)
 ```
 
 Three properties matter for the boundary:
@@ -147,5 +153,6 @@ There is no server to run: the bundle is installed into a DSH profile and loaded
 
 - [Host routes and the bundle library](/concepts/host-routes-and-library.md) — the route table and the library's guarantees.
 - [Team Wiki service](/concepts/team-wiki-service.md) — the largest Host module.
+- [Automation tasks and the Team Wiki tools](/concepts/automation-tasks.md) — what step 5 registers and why.
 - [The browser client](/concepts/browser-client.md) — slots, store and rendering.
 - [Data model](/concepts/data-model.md) — every record and file shape.
