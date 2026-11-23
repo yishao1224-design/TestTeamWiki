@@ -9,6 +9,7 @@ okf_version: "0.2"
 # Concepts
 
 * [Architecture of the dsh-okf Plugin](concepts/architecture.md) - The two halves of the plugin, the components inside each, how they talk to each other, and where state lives on disk.
+* [Azure DevOps Hubs and Pull Requests](concepts/azure-devops-pull-requests.md) - How a hub in Azure Repos gets pull requests, tags, statuses and auto-complete — the shared PullHost shape, the AzureDevOps REST client and the pipeline that guards a merge.
 * [Build, Run, Test and Deploy](concepts/build-run-test-deploy.md) - The exact commands to install, type-check, build, smoke-test, harness-check and preview the plugin, and how it is installed and updated in DSH.
 * [Conventions, Pitfalls and Open Questions](concepts/conventions-and-pitfalls.md) - The coding and workflow conventions this repository follows, the traps a maintainer should know, and what the authors themselves flag as unverified.
 * [Data Model and Entities](concepts/data-model.md) - The records the plugin stores — bundle frontmatter, library.json, team.json, work records and wire DTOs — and the invariants that hold them together.

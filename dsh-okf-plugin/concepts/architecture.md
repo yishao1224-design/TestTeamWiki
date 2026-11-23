@@ -6,7 +6,7 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-20
+updated: 2026-11-21
 tags: []
 sources:
   - resource: /sources/2026-11-20-readme.md
@@ -18,7 +18,7 @@ sources:
   - resource: /sources/2026-11-20-package-manifest.md
     id: manifest
     title: package.json capture
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/index.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/index.ts
     id: host-entry
     title: src/index.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/types/contract.ts
@@ -30,7 +30,7 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/library.ts
     id: library
     title: src/host/library.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/team.ts
     id: team
     title: src/host/team.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/client/index.ts
@@ -41,7 +41,7 @@ sources:
     title: src/client/store.ts
 generated:
   by: dsh/agent
-  at: 2026-11-20
+  at: 2026-11-21
 ---
 
 # Architecture of the dsh-okf Plugin
@@ -78,15 +78,18 @@ Host modules and their jobs:
 | `host/bundle.ts` | Bundle-root detection, catalog summary, safe page reads (path-traversal guards, page and byte caps) |
 | `host/frontmatter.ts` | A dependency-free YAML-frontmatter reader for flat keys and scalar lists |
 | `host/knowledge.ts` | The per-session prompt context, the `index.md` cache, editing rules |
-| `host/team.ts` | The Team Wiki service: project list, pull requests, Maintain, New project wiki, Open pull request, Initialize / Sync, Set up the hub, Publish |
+| `host/team.ts` | The Team Wiki service: project list, pull requests, Maintain, New project wiki, Open pull request, Sync from code (first round = the Initialize read-through), Set up the hub, Publish |
 | `host/review.ts` | Reviewed / unreviewed from frontmatter; the agent-edit stamp; frontmatter text surgery |
 | `host/eligibility.ts` | The auto-merge rule, shared by the Host and `lib/check-pr.js` |
 | `host/registry.ts` | The hub's `AGENTS.md` project-registry table (parse and append) |
 | `host/github.ts` | The few GitHub REST calls (open/update PR, label, list PRs, checks, state) |
+| `host/azure.ts` | The same calls for Azure DevOps (pull requests, tags, statuses, auto-complete) |
 | `host/publish.ts` | Rendering a bundle into Azure DevOps wiki pages |
 | `host/codesync.ts` | The recorded code commit, affected pages, and the sync task prompt |
 | `host/summary.ts` | A suggested PR title and summary from the changed files |
 | `host/run.ts` | Child processes (`git`, `python`) with the token header and redaction |
+
+The GitHub and Azure DevOps clients sit behind one `PullHost` shape in `team.ts`: who is behind the token, open or update a pull request, label it, list open ones with their checks, read whether one merged or closed, and the ref to fetch a pull request's head from. Only Azure DevOps gets a `setAutoMerge` (auto-complete); on GitHub the hub's workflow drives the merge instead.
 
 ## The browser half
 
@@ -110,7 +113,7 @@ browser (client.js)                      dsh Host process (index.js)
        │                                   library.ts ── git ──▶ remote
        │                                   team.ts ───── git/python ──▶ hub,
        │                                        │                      code repo,
-       │                                        │                      GitHub REST
+       │                                        │                      GitHub / Azure DevOps REST
        │◀──────── JSON { entry | status | … } ──┘
        │
   system prompt ◀── ctx.inject systemPrompt.context('okf:session-bundle')

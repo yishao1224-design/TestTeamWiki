@@ -1,6 +1,36 @@
 # Bundle Update Log
 
+## 2026-11-23
+* **Creation**: [Azure DevOps Hubs and Pull Requests](/concepts/azure-devops-pull-requests.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
+* **Update**: [Team Wiki Hub Repository](/entities/team-wiki-hub.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
+* **Update**: [Team Wiki Service](/concepts/team-wiki-service.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
+* **Update**: [Review State and Auto-Merge](/concepts/review-and-auto-merge.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
+* **Update**: [dsh-okf Plugin — Overview](/concepts/overview.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
+* **Update**: [The OKF Toolchain (okf.py) and the Hub Template](/concepts/okf-toolchain.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
+* **Update**: [Host Routes and the Bundle Library](/concepts/host-routes-and-library.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
+* **Update**: [Data Model and Entities](/concepts/data-model.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
+* **Update**: [Conventions, Pitfalls and Open Questions](/concepts/conventions-and-pitfalls.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
+* **Update**: [Build, Run, Test and Deploy](/concepts/build-run-test-deploy.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
+* **Update**: [The Browser Client](/concepts/browser-client.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
+* **Update**: [Architecture of the dsh-okf Plugin](/concepts/architecture.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
+* **Update**: [Bundle Schema & Conventions](/SCHEMA.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
+
+## 2026-11-21
+* **Creation**: [Azure DevOps Hubs and Pull Requests](/concepts/azure-devops-pull-requests.md) — Document Azure Repos hubs: the PullHost shape, the AzureDevOps REST client, auto-complete and the build-validation guard
+* **Update**: [Architecture of the dsh-okf Plugin](/concepts/architecture.md) — Add host/azure.ts and the shared PullHost shape
+* **Update**: [Build, Run, Test and Deploy](/concepts/build-run-test-deploy.md) — Add ado-smoke.mjs and the Azure Pipelines guard to the hub setup steps
+* **Update**: [Conventions, Pitfalls and Open Questions](/concepts/conventions-and-pitfalls.md) — Azure DevOps failures as github-* errors; auto-complete waits on branch policies
+* **Update**: [Data Model and Entities](/concepts/data-model.md) — A maintenance round's pull request may live on GitHub or Azure DevOps
+* **Update**: [dsh-okf Plugin — Overview](/concepts/overview.md) — Azure DevOps pull requests and auto-complete
+* **Update**: [Host Routes and the Bundle Library](/concepts/host-routes-and-library.md) — The Azure DevOps client also throws GitHubError
+* **Update**: [Review State and Auto-Merge](/concepts/review-and-auto-merge.md) — check-pr's Azure Pipelines output and the build-validation guard
+* **Update**: [Team Wiki Hub Repository](/entities/team-wiki-hub.md) — Azure Repos hubs and the build-validation guard
+* **Update**: [Team Wiki Service](/concepts/team-wiki-service.md) — Pull requests on GitHub or Azure DevOps, plus auto-complete
+* **Update**: [The Browser Client](/concepts/browser-client.md) — Provider-specific token warning and a host-neutral review link
+* **Update**: [The OKF Toolchain (okf.py) and the Hub Template](/concepts/okf-toolchain.md) — Set up the hub now writes the Azure auto-complete workflow
+
 ## 2026-11-20
+* Update: [Team Wiki Service](/concepts/team-wiki-service.md) — Sync from code is the one code button; a pending wiki's card opens its workspace and its missing pull request
 * **Ingestion**: [examples/wiki-publish-to-ado.yml at 95b0615 (verbatim)](/sources/2026-11-20-wiki-publish-ado-workflow.md) — Add the dsh-okf-plugin project wiki
 * **Ingestion**: [examples/wiki-auto-merge.yml at 95b0615 (verbatim)](/sources/2026-11-20-wiki-auto-merge-workflow.md) — Add the dsh-okf-plugin project wiki
 * **Ingestion**: [tsconfig.json at 95b0615 (verbatim)](/sources/2026-11-20-tsconfig.md) — Add the dsh-okf-plugin project wiki

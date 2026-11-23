@@ -6,22 +6,25 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-20
+updated: 2026-11-21
 tags: []
 sources:
-  - resource: /sources/2026-11-20-readme.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/README.md
     id: readme
-    title: README at 95b0615
+    title: README.md
   - resource: /sources/2026-11-20-hub-agents-template.md
     id: hub-agents
     title: templates/hub/AGENTS.md capture
   - resource: /sources/2026-11-20-wiki-auto-merge-workflow.md
     id: ci-auto-merge
     title: examples/wiki-auto-merge.yml capture
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/examples/wiki-auto-complete-ado.yml
+    id: ci-ado-auto-complete
+    title: examples/wiki-auto-complete-ado.yml
   - resource: /sources/2026-11-20-wiki-publish-ado-workflow.md
     id: ci-ado
     title: examples/wiki-publish-to-ado.yml capture
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/templates/hub/README.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/templates/hub/README.md
     id: hub-readme
     title: templates/hub/README.md
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/registry.ts
@@ -29,14 +32,14 @@ sources:
     title: src/host/registry.ts
 generated:
   by: dsh/agent
-  at: 2026-11-20
+  at: 2026-11-21
 ---
 
 # Team Wiki Hub Repository
 
 ## What it is
 
-A single git repository — GitHub or GitHub Enterprise for the pull-request features — that holds the knowledge of every project of a team: one OKF bundle per project, a registry in `AGENTS.md`, a shared `scripts/okf.py`, and the `published/Projects/` pages rendered for people [readme].
+A single git repository — GitHub, GitHub Enterprise or Azure Repos for the pull-request features — that holds the knowledge of every project of a team: one OKF bundle per project, a registry in `AGENTS.md`, a shared `scripts/okf.py`, and the `published/Projects/` pages rendered for people [readme].
 
 ```text
 team-wiki/
@@ -70,13 +73,13 @@ The skeleton `AGENTS.md` states the working agreement [hub-agents]: agents read 
 
 ## One project per pull request
 
-A maintenance round clones the hub into `<library>/team/work/<slug>` on a `wiki/…` branch, edits only the project's bundle (plus its published pages), commits only that scope, and opens a pull request. CI maps the changed files back through the registry and requires exactly one project; a change under `published/` or to `AGENTS.md` always needs a person [readme][ci-auto-merge].
+A maintenance round clones the hub into `<library>/team/work/<slug>` on a `wiki/…` branch, edits only the project's bundle (plus its published pages), commits only that scope, and opens a pull request on GitHub or Azure DevOps. CI maps the changed files back through the registry and requires exactly one project; a change under `published/` or to `AGENTS.md` always needs a person [readme][ci-auto-merge]. On Azure Repos the guard is a required Build validation (`examples/wiki-auto-complete-ado.yml`): the Host turns auto-complete on for an eligible pull request, and the pipeline turns it off again for one that needs a person [readme][ci-ado-auto-complete].
 
 ## How it is created and changed
 
-- **Set up the hub** fills an empty repository with the skeleton and the CI files as the first commit of the base branch; it refuses if the repository has any branch [readme].
+- **Set up the hub** fills an empty repository with the skeleton, the checker and the three example workflows as the first commit of the base branch; it refuses if the repository has any branch [readme].
 - **New project wiki** scaffolds a bundle with `okf.py init`, writes `wiki_name`, adds the registry row, and opens the setup as the first pull request [readme].
-- **Maintain**, **Initialize from code** and **Sync from code** change it only through `wiki/…` branches [readme].
+- **Maintain** and **Sync from code** (whose first round is the Initialize read-through) change it only through `wiki/…` branches [readme].
 - **Publish** writes `published/Projects/…` into the same pull request, and after a merge the ADO sync workflow mirrors that folder into the Azure DevOps wiki's `Projects/` section [ci-ado].
 
 ## Related pages

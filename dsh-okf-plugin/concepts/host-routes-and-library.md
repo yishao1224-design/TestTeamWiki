@@ -6,7 +6,7 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-20
+updated: 2026-11-21
 tags: []
 sources:
   - resource: /sources/2026-11-20-readme.md
@@ -15,9 +15,12 @@ sources:
   - resource: /sources/2026-11-20-cordis-patch.md
     id: patch
     title: cordis.patch.yml capture
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/index.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/index.ts
     id: host-entry
     title: src/index.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/azure.ts
+    id: azure
+    title: src/host/azure.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/types/okf.ts
     id: types
     title: src/types/okf.ts
@@ -41,7 +44,7 @@ sources:
     title: src/host/run.ts
 generated:
   by: dsh/agent
-  at: 2026-11-20
+  at: 2026-11-21
 ---
 
 # Host Routes and the Bundle Library
@@ -104,7 +107,7 @@ One wrapper adds the method check (405 with an `allow` header) and turns failure
 | `LibraryError` | its own status and `{ code, message, detail? }` (4xx; codes include `bad-url`, `bad-ref`, `bad-path`, `many-bundles`, `exists`, `unknown-bundle`, `unsaved-work`, `lint-failed`, `nothing-changed`) |
 | `GitError` | 502, `git-<code>` (`auth`, `not-found`, `ref`, `timeout`, `missing-git`, `failed`) |
 | `RunError` | 502, `command-failed`, with the last 6000 characters of stdout |
-| `GitHubError` | 502, `github-<status>` |
+| `GitHubError` | 502, `github-<status>` — also what `host/azure.ts` throws, so Azure DevOps failures use the same code [azure] |
 | `ENOENT` | 404, `not-found` |
 | anything else | 500, `failed` |
 

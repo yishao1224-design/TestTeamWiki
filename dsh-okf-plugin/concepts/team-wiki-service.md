@@ -6,18 +6,21 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-20
+updated: 2026-11-21
 tags: []
 sources:
-  - resource: /sources/2026-11-20-readme.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/README.md
     id: readme
-    title: README at 95b0615
+    title: README.md
   - resource: /sources/2026-11-20-hub-agents-template.md
     id: hub-agents
     title: templates/hub/AGENTS.md capture
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/team.ts
     id: team
     title: src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/azure.ts
+    id: azure
+    title: src/host/azure.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/registry.ts
     id: registry
     title: src/host/registry.ts
@@ -38,16 +41,16 @@ sources:
     title: src/host/publish.ts
 generated:
   by: dsh/agent
-  at: 2026-11-20
+  at: 2026-11-21
 ---
 
 # Team Wiki Service
 
 ## Its job
 
-`src/host/team.ts` is the Team Wiki: one hub repository whose project wikis are OKF bundles, listed in the hub's `AGENTS.md` registry (or found by their `SCHEMA.md` when there is no registry). The service answers what the page shows, and performs the work the page starts — Maintain, New project wiki, Open pull request, Initialize from code, Sync from code, Publish, Set up the hub [team][readme].
+`src/host/team.ts` is the Team Wiki: one hub repository whose project wikis are OKF bundles, listed in the hub's `AGENTS.md` registry (or found by their `SCHEMA.md` when there is no registry). The service answers what the page shows, and performs the work the page starts — Maintain, New project wiki, Open pull request, Sync from code (whose first round is the Initialize read-through), Publish, Set up the hub [team][readme].
 
-It is built by `openTeam(options)` in `src/index.ts` with the hub template paths (`templates/hub/`, `lib/check-pr.js`, and the two example workflows), the `python` executable, `team.okfScript`, the GitHub host/API, the auto-merge label, the agent actor and the commit author [readme].
+It is built by `openTeam(options)` in `src/index.ts` with the hub template paths (`templates/hub/`, `lib/check-pr.js` and the three example workflows), the `python` executable, `team.okfScript`, the GitHub host/API or the Azure DevOps REST root (`team.azureApi`), the auto-merge label, the agent actor and the commit author [readme].
 
 ## State on disk
 
@@ -70,16 +73,16 @@ It is built by `openTeam(options)` in `src/index.ts` with the hub template paths
 | `connect({url, ref, root})` | Parses the remote, clones into `main.<hex>.tmp` (blobless), moves it to `main/`, derives the base branch, records `team`, marks the old repository's open workspaces `closed`, clears caches |
 | `refresh()` | Fetches the base branch into `main/`, runs `git ls-remote <repo> HEAD` for every registered code repository (no clone), sweeps old per-round folders, clears the PR cache |
 | `wiki(folder)` | One project wiki: its `ProjectWiki` plus every page's `WikiPage` review state |
-| `pulls(force?)` | Open GitHub PRs against the base branch, each fetched into `refs/okf-pr/<n>`, mapped to wikis, judged with `judge()`, with checks; 60 s memory cache |
-| `create(request)` | New project wiki: slug the folder, refuse duplicates, clone on `wiki/new-<slug>-<hex>`, scaffold, add the registry row, open the setup PR |
-| `maintain(folder)` | Reuse the open workspace, else a new round on `wiki/<slug>-<stamp>-<hex>`; registers/updates the library entry |
+| `pulls(force?)` | Open pull requests on GitHub or Azure DevOps against the base branch, each fetched into `refs/okf-pr/<n>` (a GitHub PR from `refs/pull/<n>/head`, an Azure DevOps one from its source branch), mapped to wikis, judged with `judge()`, with checks; 60 s memory cache |
+| `create(request)` | New project wiki: slug the folder, refuse duplicates, clone on `wiki/new-<slug>-<hex>`, scaffold, add the registry row, open the setup PR; a failed open is reported as `prError` and leaves the pending workspace in place |
+| `maintain(folder)` | Reuse the open workspace — including a new wiki still in its setup PR — else a new round on `wiki/<slug>-<stamp>-<hex>`; registers/updates the library entry |
 | `changes(id)` | The files a workspace holds against `origin/<base>`, reviewed/unreviewed, uncommitted count, a suggested PR title and summary |
-| `openPr(id, {title, summary})` | Stamp, toolchain, commit, judge, push, open/update the PR, label |
+| `openPr(id, {title, summary})` | Stamp, toolchain, commit, judge, push, open/update the pull request on GitHub or Azure DevOps, label it, and on Azure DevOps turn auto-complete on or off |
 | `attach(folder)` | Add the base-branch wiki to the library as a read-only local entry |
 | `publish(folder)` | Render `host/publish.ts` output into `published/Projects/…` and open/update the PR |
 | `setupHub()` | Push the hub skeleton as the first commit of an empty repository |
-| `initialize(folder)` | Open (or reuse) the workspace, check the code out under `.code/<slug>/`, write the read-through task |
-| `sync(folder)` | Answer `upToDate` when the code has not moved; else diff, find affected pages, set `code_commit`, write the sync task |
+| `initialize(folder)` | Open (or reuse) the workspace, check the code out under `.code/<slug>/`, write the read-through task; the client no longer has a button for it |
+| `sync(folder)` | Answer `upToDate` when the code has not moved; otherwise do the read-through on the first usable round, else diff, find affected pages, set `code_commit`, write the sync task |
 
 ## Listing project wikis
 
@@ -100,7 +103,7 @@ For each project the list computes `missing` (registered but no folder on the ba
 - the record gets `entryId: team-<slug>`, so a project has one folder, one DSH workspace and one library entry;
 - `sweepOld` removes the per-round folders older layouts left behind, but only when they hold nothing uncommitted or unpushed [team][readme].
 
-`maintain()` first calls `openRecordOf`, which treats a missing `.git` or a merged/closed pull request as the end of the round; otherwise it returns the open record, so pressing Maintain again reopens the same workspace instead of starting a second one [team].
+`maintain()` first calls `openRecordOf`, which treats a missing `.git` or a merged/closed pull request as the end of the round; otherwise it returns the open record, so pressing Maintain again reopens the same workspace instead of starting a second one [team]. The exported `maintain` is the `openRound` wrapper described under [Sync from code](#sync-from-code), which is what keeps a pending new wiki's setup workspace reachable.
 
 `entryFor(record)` is the library entry a maintenance session holds: `root = <workspace>/<wiki>`, `origin: { kind: 'local' }`, `workspace` set, and `team: { maintainId, wiki, project }`. That `team` field is what `knowledge.ts` uses to apply the team editing rules and what the client uses to show the Open pull request button [team][readme].
 
@@ -112,11 +115,11 @@ For each project the list computes `missing` (registered but no folder on the ba
 1. **Run the repository's toolchain.** `links`, `index`, `lint`, then one `log` line per changed page (`Creation` / `Update` / `Removal` / `Ingestion`). A lint failure raises `lint-failed` with the linter's output and **nothing is committed or pushed**.
 2. **Commit only what belongs to the wiki PR.** The scope is the wiki folder, the project's `published/Projects/<Project>/` pages and landing page, and `AGENTS.md` only for a new project. Everything else is left out and listed in `notes`. Commits use `user.name`/`user.email` from git when configured, else `team.commitAuthor`, and the message carries a `Wiki-Workspace: <id>` trailer.
 3. **Judge the branch against the base** with `judge(record.wiki, files)`; a missing toolchain script or a missing merge base adds a reason, so the PR needs a person.
-4. **Push and open.** The branch is pushed with the token; on GitHub the PR is opened or updated and labeled (`wiki-auto-merge` added when eligible, removed when not). Any other host leaves the branch pushed and says to open the PR by hand; without a token the same happens with a note.
+4. **Push and open.** The branch is pushed with the token; on GitHub or Azure DevOps the pull request is opened or updated, and the `wiki-auto-merge` label (a tag on Azure DevOps) is added when eligible and removed when not. On Azure DevOps the Host also sets auto-complete on for an eligible change (squash, delete the source branch) and off when the change needs a person; a failed label or auto-complete call is recorded in `notes` rather than failing the round. Any other git host leaves the branch pushed and says to open the pull request by hand; without a token the same happens with a note naming the token variable.
 
 The PR body (`prBody`) is a table of pages with their review state before and after, the auto-merge verdict or the reasons it needs a person, the review instructions, the lint output in a `<details>` block, the notes, and an HTML comment recording the workspace id and verdict [team].
 
-## Initialize and Sync from code
+## Sync from code
 
 `prepareCode(record)` puts the project's code at `.code/<slug>/` inside the maintenance workspace [team]:
 
@@ -124,17 +127,19 @@ The PR body (`prBody`) is a table of pages with their review state before and af
 - `/.code/` is appended to the workspace clone's `.git/info/exclude`, so it can never enter a wiki PR;
 - a reusable clone is fetched and detached at `FETCH_HEAD`; otherwise the code is cloned `--filter=blob:none --single-branch`.
 
-`initialize(folder)` opens the round (falling back to the project's open setup workspace while the new wiki is still in its setup PR), calls `checkoutCode`, records `code_commit`/`code_synced` into the workspace's `SCHEMA.md`, and returns the read-through task: survey, read the main modules, write overview / architecture / per-module / data-model / build-run-test / conventions pages as unreviewed drafts citing `<repo>/blob/<commit>/<path>`, then links, index and lint [team][readme].
+Sync from code is the project's one code button, and **Initialize from code** is what its first usable round does [team][readme]. The Host keeps the pieces separate. `openRound(folder)` is `maintain(folder)` with a fallback to the project's still-open setup workspace when the normal round cannot be opened — a new wiki is not on the base branch yet — so `/api/okf/team/maintain` and the pending card's Open workspace button both reach it before the setup PR merges. The exported `maintain` is that wrapper; `initialize(folder)` and `sync(folder)` use it too, and the client no longer offers an Initialize button of its own [team].
 
-`sync(folder)` first answers without starting a round when `git ls-remote` shows the same commit the wiki records. Otherwise it opens a round, diffs `recorded..HEAD`, lists commits, computes `affectedPages` (pages whose frontmatter cites a changed path, with a path-boundary check), records the new commit, and builds the sync task prompt [team][codesync]. Without a commit the code clone actually has, it falls back to the full read-through [team].
+`initialize(folder)` checks the code out under `.code/<slug>/`, records `code_commit`/`code_synced` into the workspace's `SCHEMA.md`, and returns the read-through task: survey, read the main modules, write overview / architecture / per-module / data-model / build-run-test / conventions pages as unreviewed drafts citing `<repo>/blob/<commit>/<path>`, then links, index and lint. The New project wiki modal's `initialize` checkbox still runs the same checkout and prompt through `create()` [team][readme].
+
+`sync(folder)` first answers without starting a round when `git ls-remote` shows the same commit the wiki records. Otherwise it opens a round, and when the recorded commit is missing or unknown to the code clone it does the same read-through and reports `fallback: true`; with a usable commit it diffs `recorded..HEAD`, lists commits, computes `affectedPages` (pages whose frontmatter cites a changed path, with a path-boundary check), records the new commit, and builds the sync task prompt [team][codesync]. Both paths write `code_commit` into the workspace's `SCHEMA.md` before the prompt exists, so the next Refresh reads the new base [team].
 
 ## Set up the hub
 
-`setupHub()` refuses when `git ls-remote --heads origin` is non-empty; otherwise it creates a temporary repository on the base branch, copies `templates/hub/` into it, copies the single files (`check-pr.js` → `.github/wiki/check-pr.js`, the two workflows → `.github/wiki/workflows/`), commits with the configured identity and pushes `HEAD:refs/heads/<base>` [team][readme]. The workflows deliberately sit outside `.github/workflows/` so the first push needs no `workflow` token scope [readme][hub-agents].
+`setupHub()` refuses when `git ls-remote --heads origin` is non-empty; otherwise it creates a temporary repository on the base branch, copies `templates/hub/` into it, copies the single files (`check-pr.js` → `.github/wiki/check-pr.js`, the three workflows → `.github/wiki/workflows/`), commits with the configured identity and pushes `HEAD:refs/heads/<base>` [team][readme]. The workflows deliberately sit outside `.github/workflows/` so the first push needs no `workflow` token scope [readme][hub-agents].
 
 ## Pull request listing
 
-`pulls()` lists open PRs through `GitHub.openPulls` (one page of 100, newest first), fetches their heads into `refs/okf-pr/<n>`, and for each computes the merge base, the changed files, the wikis it touches (`wikiOfPath` maps `published/Projects/<Project>/…` and bundle folders to a project), and the verdict [team][github]. A PR that touches no wiki and was not opened here is not listed. After listing, any maintenance record whose PR is no longer open is marked `merged` or `closed`; when something merged, `main/` is re-synced so the page shows the new base [team].
+`pulls()` lists open pull requests through the host's client — `GitHub.openPulls` or `AzureDevOps.openPulls` (one page of up to 100) — fetches their heads into `refs/okf-pr/<n>` (GitHub: `refs/pull/<n>/head`; Azure DevOps: the source branch), and for each computes the merge base, the changed files, the wikis it touches (`wikiOfPath` maps `published/Projects/<Project>/…` and bundle folders to a project), and the verdict [team][github][azure]. Both clients answer in one `PullSummary` shape, so the rest of the listing is shared. A PR that touches no wiki and was not opened here is not listed. After listing, any maintenance record whose PR is no longer open is marked `merged` or `closed`; when something merged, `main/` is re-synced so the page shows the new base [team].
 
 The list is cached for `PULLS_TTL_MS = 60_000`; a 404 on a label removal is ignored, and the `statusChanged` flag tells the client to drop its cached wiki details [team].
 
@@ -144,14 +149,16 @@ The list is cached for `PULLS_TTL_MS = 60_000`; a 404 on a label removal is igno
 |---|---|
 | `git` (`team.git` / `gitPath`) | clone, fetch, switch, stash, status, diff, show, log, ls-remote, merge-base, push |
 | `python` (`team.python`) + the repo's `okfScript` | `init`, `index`, `links`, `lint`, `log` |
-| GitHub REST (`team.githubHost` / `githubApi`) | pull requests, labels, check runs |
-| A token in `DSH_OKF_GITHUB_TOKEN` / `DSH_OKF_GIT_TOKEN` / `DSH_OKF_AZURE_TOKEN` | push and PR calls |
+| GitHub REST (`team.githubHost` / `githubApi`) | pull requests, labels and check runs on GitHub |
+| Azure DevOps REST (`team.azureApi`) | pull requests, tags, statuses and auto-complete on Azure Repos |
+| A token in `DSH_OKF_GITHUB_TOKEN` / `DSH_OKF_AZURE_TOKEN` / `DSH_OKF_GIT_TOKEN` | push and PR calls (Azure DevOps takes a Code: Read & Write PAT as Basic auth) |
 
-Recurring failure classes surface as `LibraryError` with a code the client shows: `no-team`, `bad-url`, `bad-ref`, `unknown-wiki`, `exists`, `busy`, `reset-failed`, `no-repo`, `closed`, `nothing-changed`, `lint-failed`, `not-empty`. Azure DevOps hubs are supported for Maintain, New project wiki and pushing, but their pull requests are neither listed nor opened — `pulls()` returns a `note` of `azure` [team][readme].
+Recurring failure classes surface as `LibraryError` with a code the client shows: `no-team`, `bad-url`, `bad-ref`, `unknown-wiki`, `exists`, `busy`, `reset-failed`, `no-repo`, `closed`, `nothing-changed`, `lint-failed`, `not-empty`. Hubs on GitHub, GitHub Enterprise and Azure DevOps list and open pull requests; any other git host gets the branch pushed and a `note` of `not-github` from `pulls()`, as does an Azure DevOps remote the parser cannot place (no organization or project) [team][readme].
 
 ## Related pages
 
 - [Review state and auto-merge](/concepts/review-and-auto-merge.md) — the `judge()` rule this service calls at step 3.
+- [Azure DevOps hubs and pull requests](/concepts/azure-devops-pull-requests.md) — the other host this service opens pull requests on.
 - [Publishing to the Azure DevOps wiki](/concepts/publish-pipeline.md) — what `publish()` writes.
 - [The OKF toolchain](/concepts/okf-toolchain.md) — the `okf.py` subcommands step 1 runs.
 - [Data model](/concepts/data-model.md) — `MaintainRecord`, `ProjectWiki`, `PullView`.
