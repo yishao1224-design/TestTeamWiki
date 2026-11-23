@@ -6,7 +6,7 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-21
+updated: 2026-11-23
 tags: []
 sources:
   - resource: /sources/2026-11-20-readme.md
@@ -21,19 +21,19 @@ sources:
   - resource: /sources/2026-11-20-tsconfig.md
     id: tsconfig
     title: tsconfig.json capture
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/scripts/smoke.mjs
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/scripts/smoke.mjs
     id: smoke
     title: scripts/smoke.mjs
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/scripts/team-smoke.mjs
     id: team-smoke
     title: scripts/team-smoke.mjs
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/scripts/hub-smoke.mjs
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/scripts/hub-smoke.mjs
     id: hub-smoke
     title: scripts/hub-smoke.mjs
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/scripts/ado-smoke.mjs
     id: ado-smoke
     title: scripts/ado-smoke.mjs
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/scripts/harness-check.mjs
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/scripts/harness-check.mjs
     id: harness-check
     title: scripts/harness-check.mjs
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/scripts/preview-server.mjs
@@ -41,7 +41,7 @@ sources:
     title: scripts/preview-server.mjs
 generated:
   by: dsh/agent
-  at: 2026-11-21
+  at: 2026-11-23
 ---
 
 # Build, Run, Test and Deploy
@@ -84,9 +84,9 @@ That is `node scripts/smoke.mjs && node scripts/team-smoke.mjs && node scripts/h
 
 | Script | Needs | Covers |
 |---|---|---|
-| `scripts/smoke.mjs` | `git` only — no Harness, no browser, no network | Two throwaway `file://` remotes; the built Host routes (fetch, auto-detect, many-bundles, duplicate id, refused URL/ref/path, preview, traversal refusal, update clean/dirty/forced, add-local, remove); the prompt context incl. subagent inheritance; that no tools are registered; the built browser artifact rendered with `react-dom/server` and the markdown safety rules [smoke][readme] |
+| `scripts/smoke.mjs` | `git` only — no Harness, no browser, no network | Two throwaway `file://` remotes; the built Host routes (fetch, auto-detect, many-bundles, duplicate id, refused URL/ref/path, preview, traversal refusal, update clean/dirty/forced, add-local, remove); the prompt context incl. subagent inheritance; that exactly `wiki_sync_from_code` and `wiki_open_pr` are registered (object-rooted parameters with `additionalProperties: false`, an object `output.schema`, a `render`); the built browser artifact rendered with `react-dom/server` and the markdown safety rules [smoke] |
 | `scripts/team-smoke.mjs` | a knowledgeAgent checkout (`WIKI_FIXTURE`, else `../knowledgeAgent`) and Python | A bare repo behind a GitHub URL via `url.<file>.insteadOf` plus a stand-in GitHub API: connect, review counts, Preview, Maintain and reuse, team rules in the prompt, Open pull request (eligible, then a reviewed page reset, then a lint failure that commits nothing), the PR list, `lib/check-pr.js`, New project wiki, merge-closes-workspace [team-smoke][readme] |
-| `scripts/hub-smoke.mjs` | the same fixture | The hub layout on GitHub Enterprise (`github.acme.com`, API under `/api/v3`): registry-driven list, eligible page, `published/` needing a person, New project wiki adding a registry row, the first Sync from code reading the code through, a setup pull request opened later from its pending card, Publish, and `check-pr.js` mapping each case [hub-smoke][readme] |
+| `scripts/hub-smoke.mjs` | the same fixture | The hub layout on GitHub Enterprise (`github.acme.com`, API under `/api/v3`): registry-driven list, eligible page, `published/` needing a person, New project wiki adding a registry row, the first Sync from code reading the code through, a setup pull request opened later from its pending card, Publish, and `check-pr.js` mapping each case. It also calls the two model tools as an automation task would: an unknown folder is refused with the choices, `wiki_sync_from_code` answers up to date and then a task after a code commit, Initialize and each sync record `code_commit` in a `log.md` **Sync** entry and leave `SCHEMA.md` alone, a legacy `SCHEMA.md` commit is still the baseline and is dropped, `wiki_open_pr` updates the round's pull request (a second call updates the same one), unknown arguments are refused, and with two project wikis a call outside any workspace asks for the folder while one from the payments workspace finds it [hub-smoke] |
 | `scripts/ado-smoke.mjs` | the same fixture plus a fake Azure DevOps API | The pull request side on Azure Repos (`https://dev.azure.com/acme/Wiki/_git/team-wiki`): connect, Maintain, an eligible pull request tagged and auto-complete on (squash), pull requests listed from the source branch with the latest status per context, a reviewed page edited (tag and auto-complete off, title kept), Mark reviewed with the PAT's account, and a completed pull request closing the workspace and moving the base clone; every call is checked for the PAT and `api-version=7.1` [ado-smoke][readme] |
 
 Two checks are outside `npm run smoke`:
@@ -96,7 +96,7 @@ Two checks are outside `npm run smoke`:
 DSH_ROOT=D:/project/dsh node --import file:///D:/project/dsh/node_modules/tsx/dist/esm/index.mjs scripts/harness-check.mjs
 ```
 
-It asserts the module applies under strict injection, that `assemble({ agent })` carries the bundle for the right session only, that no `okf_*` tool reaches the real registry, and that disposal removes the context [harness-check].
+It asserts the module applies under strict injection, that `assemble({ agent })` carries the bundle for the right session only, that `wiki_sync_from_code` and `wiki_open_pr` reach the real registry and a call runs through its pipeline (with no team wiki connected it fails with a message the model can act on, and bad arguments are refused), that no `okf_*` tool does, and that disposal removes the context and the tools [harness-check].
 
 ```sh
 node scripts/preview-server.mjs --port 4317 [--library <dir>] [--github-api <url>]

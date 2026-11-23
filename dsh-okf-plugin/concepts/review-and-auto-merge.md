@@ -6,10 +6,10 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-21
+updated: 2026-11-23
 tags: []
 sources:
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/README.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/README.md
     id: readme
     title: README.md
   - resource: /sources/2026-11-20-hub-agents-template.md
@@ -39,9 +39,12 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/registry.ts
     id: registry
     title: src/host/registry.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/team.ts
+    id: team
+    title: src/host/team.ts
 generated:
   by: dsh/agent
-  at: 2026-11-21
+  at: 2026-11-23
 ---
 
 # Review State and Auto-Merge
@@ -96,6 +99,8 @@ The Team Wiki service calls this in two places: Open pull request resets any rev
 | an existing capture that is modified or deleted | needs a person — captures are immutable |
 
 An empty change is also a reason. The same function backs the Host (`pulls()` and `openPr()`), `lib/check-pr.js` and both CI guards below, so the label (or tag) the plugin sets and the verdict CI computes come from one implementation [eligibility][readme].
+
+The `SCHEMA.md` bucket is why a code sync records its commit in `log.md` rather than `SCHEMA.md`: `log.md` is allowed, so a sync no longer makes its own pull request ineligible, and it can auto-merge when every page it changes is unreviewed. A legacy wiki's first sync, which drops the old `code_commit`/`code_synced` keys from `SCHEMA.md`, still needs a person [team][readme].
 
 ## The CI checker
 

@@ -1,6 +1,19 @@
 # Bundle Update Log
 
 ## 2026-11-23
+* **Creation**: [Automation Tasks and the Team Wiki Tools](/concepts/automation-tasks.md) — dsh-okf-plugin: sync wiki to b71e34f (Team Wiki tools, log.md commit)
+* **Update**: [Team Wiki Hub Repository](/entities/team-wiki-hub.md) — dsh-okf-plugin: sync wiki to b71e34f (Team Wiki tools, log.md commit)
+* **Update**: [DeepSeek Harness (DSH)](/entities/deepseek-harness.md) — dsh-okf-plugin: sync wiki to b71e34f (Team Wiki tools, log.md commit)
+* **Update**: [Team Wiki Service](/concepts/team-wiki-service.md) — dsh-okf-plugin: sync wiki to b71e34f (Team Wiki tools, log.md commit)
+* **Update**: [Review State and Auto-Merge](/concepts/review-and-auto-merge.md) — dsh-okf-plugin: sync wiki to b71e34f (Team Wiki tools, log.md commit)
+* **Update**: [dsh-okf Plugin — Overview](/concepts/overview.md) — dsh-okf-plugin: sync wiki to b71e34f (Team Wiki tools, log.md commit)
+* **Update**: [Host Routes and the Bundle Library](/concepts/host-routes-and-library.md) — dsh-okf-plugin: sync wiki to b71e34f (Team Wiki tools, log.md commit)
+* **Update**: [Data Model and Entities](/concepts/data-model.md) — dsh-okf-plugin: sync wiki to b71e34f (Team Wiki tools, log.md commit)
+* **Update**: [Conventions, Pitfalls and Open Questions](/concepts/conventions-and-pitfalls.md) — dsh-okf-plugin: sync wiki to b71e34f (Team Wiki tools, log.md commit)
+* **Update**: [Build, Run, Test and Deploy](/concepts/build-run-test-deploy.md) — dsh-okf-plugin: sync wiki to b71e34f (Team Wiki tools, log.md commit)
+* **Update**: [Architecture of the dsh-okf Plugin](/concepts/architecture.md) — dsh-okf-plugin: sync wiki to b71e34f (Team Wiki tools, log.md commit)
+* **Update**: [Bundle Schema & Conventions](/SCHEMA.md) — dsh-okf-plugin: sync wiki to b71e34f (Team Wiki tools, log.md commit)
+* **Sync**: the wiki reflects https://github.com/yishao1224-design/dsh-okf-plugin at `code_commit: b71e34fb1c76d88af680440531fda3c5a9c75c34` (was ec5a774e59).
 * **Creation**: [Azure DevOps Hubs and Pull Requests](/concepts/azure-devops-pull-requests.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
 * **Update**: [Team Wiki Hub Repository](/entities/team-wiki-hub.md) — dsh-okf-plugin: adds 1 page, updates 11 pages
 * **Update**: [Team Wiki Service](/concepts/team-wiki-service.md) — dsh-okf-plugin: adds 1 page, updates 11 pages

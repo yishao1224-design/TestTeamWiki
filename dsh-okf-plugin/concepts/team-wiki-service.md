@@ -6,16 +6,16 @@ status: draft
 lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-21
+updated: 2026-11-23
 tags: []
 sources:
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/README.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/README.md
     id: readme
     title: README.md
   - resource: /sources/2026-11-20-hub-agents-template.md
     id: hub-agents
     title: templates/hub/AGENTS.md capture
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/team.ts
     id: team
     title: src/host/team.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/azure.ts
@@ -27,7 +27,7 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/github.ts
     id: github
     title: src/host/github.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/codesync.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/codesync.ts
     id: codesync
     title: src/host/codesync.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/summary.ts
@@ -41,14 +41,14 @@ sources:
     title: src/host/publish.ts
 generated:
   by: dsh/agent
-  at: 2026-11-21
+  at: 2026-11-23
 ---
 
 # Team Wiki Service
 
 ## Its job
 
-`src/host/team.ts` is the Team Wiki: one hub repository whose project wikis are OKF bundles, listed in the hub's `AGENTS.md` registry (or found by their `SCHEMA.md` when there is no registry). The service answers what the page shows, and performs the work the page starts — Maintain, New project wiki, Open pull request, Sync from code (whose first round is the Initialize read-through), Publish, Set up the hub [team][readme].
+`src/host/team.ts` is the Team Wiki: one hub repository whose project wikis are OKF bundles, listed in the hub's `AGENTS.md` registry (or found by their `SCHEMA.md` when there is no registry). The service answers what the page shows, and performs the work the page starts — Maintain, New project wiki, Open pull request, Sync from code (whose first round is the Initialize read-through), Publish, Set up the hub [team][readme]. The two model tools in `host/tools.ts` call `sync()`, `openPr()` and `wikiAt()` on this same service, so an automation task runs the same steps the page does [team].
 
 It is built by `openTeam(options)` in `src/index.ts` with the hub template paths (`templates/hub/`, `lib/check-pr.js` and the three example workflows), the `python` executable, `team.okfScript`, the GitHub host/API or the Azure DevOps REST root (`team.azureApi`), the auto-merge label, the agent actor and the commit author [readme].
 
@@ -82,13 +82,15 @@ It is built by `openTeam(options)` in `src/index.ts` with the hub template paths
 | `publish(folder)` | Render `host/publish.ts` output into `published/Projects/…` and open/update the PR |
 | `setupHub()` | Push the hub skeleton as the first commit of an empty repository |
 | `initialize(folder)` | Open (or reuse) the workspace, check the code out under `.code/<slug>/`, write the read-through task; the client no longer has a button for it |
-| `sync(folder)` | Answer `upToDate` when the code has not moved; otherwise do the read-through on the first usable round, else diff, find affected pages, set `code_commit`, write the sync task |
+| `sync(folder)` | Answer `upToDate` when the code has not moved; otherwise do the read-through on the first usable round, else diff, find affected pages, record the commit in `log.md`, write the sync task |
+| `review(folder, paths)` | Mark listed pages reviewed with the token's account as the reviewer (a `verified` entry, a `stale_after` a fixed period out), then open or update the PR |
+| `wikiAt(path)` | The project wiki whose maintenance workspace holds `path` (its `work/<slug>` folder or anything inside it; case-folded on Windows), so a tool called from that session needs no folder argument |
 
 ## Listing project wikis
 
 `projectsIn(repo, team)` reads `AGENTS.md` with `parseRegistry`; when the table has rows, those rows are the project list, in file order, with `Repo`, `Summary` and `Owner` when present [team][registry]. Without a registry it falls back to `discoverWikis(repo, team.root)`: the wiki folder itself when it holds a `SCHEMA.md`, plus each folder directly under it that does — with `team.root = ''` that means top-level folders, skipping `NON_BUNDLE_DIRS` and bundle-internal names (`concepts`, `sources`, …) [team].
 
-For each project the list computes `missing` (registered but no folder on the base branch), `published` (`published/Projects/<Project>/` or `<Project>.md` exists, plus the last commit date that touched it), `stats` (from `readWikiPages`: pages, reviewed, unreviewed, overdue) and `code.recorded` (the SCHEMA.md `code_commit`, else the commit its pages cite most) [team][codesync]. Review counts are cached per base commit (`statsCache`), so Refresh is the way to see a moved base [team].
+For each project the list computes `missing` (registered but no folder on the base branch), `published` (`published/Projects/<Project>/` or `<Project>.md` exists, plus the last commit date that touched it), `stats` (from `readWikiPages`: pages, reviewed, unreviewed, overdue) and `code.recorded` (the newest `code_commit` in `log.md` — rotated `archive/log-YYYY.md` files included, newest year first — else a legacy `code_commit` in `SCHEMA.md`, else the commit its pages cite most) [team][codesync]. Review counts are cached per base commit (`statsCache`), so Refresh is the way to see a moved base [team].
 
 `readWikiPages` walks the wiki, skipping `sources/` and `archive/`, skipping a nested folder that holds its own `SCHEMA.md` (a nested wiki is listed separately), and computes each page's `review`, `overdue` (`lifecycle: needs_review` or `stale_after` before today), reviewer and generated stamps [team].
 
@@ -129,9 +131,24 @@ The PR body (`prBody`) is a table of pages with their review state before and af
 
 Sync from code is the project's one code button, and **Initialize from code** is what its first usable round does [team][readme]. The Host keeps the pieces separate. `openRound(folder)` is `maintain(folder)` with a fallback to the project's still-open setup workspace when the normal round cannot be opened — a new wiki is not on the base branch yet — so `/api/okf/team/maintain` and the pending card's Open workspace button both reach it before the setup PR merges. The exported `maintain` is that wrapper; `initialize(folder)` and `sync(folder)` use it too, and the client no longer offers an Initialize button of its own [team].
 
-`initialize(folder)` checks the code out under `.code/<slug>/`, records `code_commit`/`code_synced` into the workspace's `SCHEMA.md`, and returns the read-through task: survey, read the main modules, write overview / architecture / per-module / data-model / build-run-test / conventions pages as unreviewed drafts citing `<repo>/blob/<commit>/<path>`, then links, index and lint. The New project wiki modal's `initialize` checkbox still runs the same checkout and prompt through `create()` [team][readme].
+`initialize(folder)` checks the code out under `.code/<slug>/`, records the commit in the workspace's `log.md` (a dated **Sync** entry), and returns the read-through task: survey, read the main modules, write overview / architecture / per-module / data-model / build-run-test / conventions pages as unreviewed drafts citing `<repo>/blob/<commit>/<path>`, then links, index and lint. The New project wiki modal's `initialize` checkbox still runs the same checkout and prompt through `create()` [team][readme].
 
-`sync(folder)` first answers without starting a round when `git ls-remote` shows the same commit the wiki records. Otherwise it opens a round, and when the recorded commit is missing or unknown to the code clone it does the same read-through and reports `fallback: true`; with a usable commit it diffs `recorded..HEAD`, lists commits, computes `affectedPages` (pages whose frontmatter cites a changed path, with a path-boundary check), records the new commit, and builds the sync task prompt [team][codesync]. Both paths write `code_commit` into the workspace's `SCHEMA.md` before the prompt exists, so the next Refresh reads the new base [team].
+`sync(folder)` first answers without starting a round when `git ls-remote` shows the same commit the wiki records. Otherwise it opens a round, and when the recorded commit is missing or unknown to the code clone it does the same read-through and reports `fallback: true`; with a usable commit it diffs `recorded..HEAD`, lists commits, computes `affectedPages` (pages whose frontmatter cites a changed path, with a path-boundary check), records the new commit, and builds the sync task prompt [team][codesync]. Both paths call `recordCommit()` — the log entry and the legacy-key cleanup below — before the prompt exists, so the next Refresh reads the new base and the task can say the entry is already there [team].
+
+### Recording the commit in log.md
+
+The code commit a wiki reflects is recorded in the bundle's `log.md`, not in `SCHEMA.md` [team][codesync]. `recordCommit(record, commit, repo, from?)` writes through `addLogCommit()`: a line
+
+```text
+* **Sync**: the wiki reflects <repo> at `code_commit: <sha>` (was <first 10 of the old sha>).
+```
+
+under today's `## YYYY-MM-DD` heading — created after the H1 when the date is new, newest entry first — and `(first read-through)` instead of the `(was …)` part when the wiki is initialized. The shape mirrors what `okf.py log` writes, so the log stays one chronological list. `logCommit()` reads the newest `` `code_commit: <sha>` `` back out of `log.md`; `recordedCommit()` looks there first, then at rotated `archive/log-YYYY.md` files newest year first, then at a legacy `SCHEMA.md` key, then at the commit the pages cite most [team][codesync].
+
+Two consequences:
+
+- **A sync can auto-merge.** `judge()` always makes a `SCHEMA.md` change need a person, so keeping the commit out of it means a sync whose changed pages are all unreviewed stays eligible; only a page someone had reviewed makes it wait [team][readme].
+- **A wiki synced before this still works.** The old `code_commit` / `code_synced` keys in `SCHEMA.md` are read as the baseline, and the next `recordCommit()` drops them once with `dropSchemaCommit()`. That one pull request touches `SCHEMA.md`, so it needs a person; after that a sync no longer does [team][codesync][readme].
 
 ## Set up the hub
 
@@ -157,6 +174,7 @@ Recurring failure classes surface as `LibraryError` with a code the client shows
 
 ## Related pages
 
+- [Automation tasks and the Team Wiki tools](/concepts/automation-tasks.md) — the model tools that call `sync()`, `openPr()` and `wikiAt()`.
 - [Review state and auto-merge](/concepts/review-and-auto-merge.md) — the `judge()` rule this service calls at step 3.
 - [Azure DevOps hubs and pull requests](/concepts/azure-devops-pull-requests.md) — the other host this service opens pull requests on.
 - [Publishing to the Azure DevOps wiki](/concepts/publish-pipeline.md) — what `publish()` writes.

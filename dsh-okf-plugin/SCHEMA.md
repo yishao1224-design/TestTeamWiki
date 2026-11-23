@@ -6,8 +6,6 @@ status: stable
 lifecycle: active
 updated: 2026-11-20
 wiki_name: "dsh-okf-plugin"
-code_commit: ec5a774e593070c87dcca36c96a5012481f280c0
-code_synced: 2026-11-21
 ---
 
 # Bundle Schema & Conventions
