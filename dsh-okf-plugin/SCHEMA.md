@@ -1,10 +1,9 @@
 ---
 type: Schema
 title: Bundle Schema & Conventions
-description: Authoritative conventions for this OKF bundle — types, tags, frontmatter templates, lifecycle rules.
+description: Authoritative conventions for this OKF bundle — types, tags, frontmatter templates, review rules.
 status: stable
-lifecycle: active
-updated: 2026-11-20
+updated: 2026-11-25
 wiki_name: "dsh-okf-plugin"
 ---
 
@@ -45,11 +44,10 @@ type: Concept            # match to directory — see type registry above
 title: Human Readable Title
 description: One sentence for index/previews.
 status: draft            # OKF v0.2: draft | stable | deprecated
-lifecycle: draft         # draft | active | needs_review | deprecated | archived
 confidence: medium       # low | medium | high
 created: 2026-11-20
 updated: 2026-11-20
-stale_after: 2026-11-20     # required once lifecycle: active
+stale_after: 2026-11-20     # required once status: stable
 tags: []
 sources:
   - resource: /sources/2026-11-20-example.md   # capture, bundle-relative
@@ -69,10 +67,16 @@ verified:                # append one entry per real re-verification
 ---
 ```
 
-`status` is the OKF v0.2 standard field; `lifecycle` is this bundle's
-five-state extension and `status` is derived from it (`active` and
-`needs_review` are both `stable`; `archived` is `deprecated`). Lint
-errors if the two disagree.
+`status` (OKF v0.2) is the only state field: `draft` until verified,
+`stable` once verified, `deprecated` when superseded (archived pages
+are `deprecated` pages under `archive/`). A stable page needs review
+when its `stale_after` has passed or it carries the `needs-review` tag
+(a contradiction found, a source changed); `okf.py stats` lists them.
+The five review stages (`draft`, `active`, `needs_review`, `deprecated`,
+`archived`) are derived from `status`, the tag and the folder — never
+stored. The retired `lifecycle` key is still read where it survives, in
+the historical captures; `okf.py lint` warns about it and
+`okf.py migrate` folds it out (it skips captures).
 
 `generated` says what produced the page; `verified` says who confirmed
 it. Stamp `generated` whenever you write, and `verified` only after a
@@ -94,3 +98,4 @@ method/meta `Concept` pages keep free structure instead.
 
 - `unverified` — claims not yet checked against a second source
 - `contested` — sources actively disagree
+- `needs-review` — a stable page to re-check (contradiction found, source changed)

@@ -3,7 +3,6 @@ type: Concept
 title: Azure DevOps Hubs and Pull Requests
 description: How a hub in Azure Repos gets pull requests, tags, statuses and auto-complete — the shared PullHost shape, the AzureDevOps REST client and the pipeline that guards a merge.
 status: draft
-lifecycle: draft
 confidence: medium
 created: 2026-11-21
 updated: 2026-11-21

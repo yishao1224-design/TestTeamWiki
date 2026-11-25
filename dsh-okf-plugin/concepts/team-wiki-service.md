@@ -3,19 +3,18 @@ type: Concept
 title: Team Wiki Service
 description: The team.ts Host service that lists a hub's project wikis, runs maintenance rounds, opens pull requests and bootstraps or syncs wikis from code.
 status: draft
-lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-23
+updated: 2026-11-25
 tags: []
 sources:
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/README.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/README.md
     id: readme
     title: README.md
   - resource: /sources/2026-11-20-hub-agents-template.md
     id: hub-agents
     title: templates/hub/AGENTS.md capture
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/team.ts
     id: team
     title: src/host/team.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/azure.ts
@@ -27,7 +26,7 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/github.ts
     id: github
     title: src/host/github.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/codesync.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/codesync.ts
     id: codesync
     title: src/host/codesync.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/summary.ts
@@ -36,12 +35,12 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/run.ts
     id: run
     title: src/host/run.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/publish.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/publish.ts
     id: publish
     title: src/host/publish.ts
 generated:
   by: dsh/agent
-  at: 2026-11-23
+  at: 2026-11-25
 ---
 
 # Team Wiki Service
@@ -75,7 +74,7 @@ It is built by `openTeam(options)` in `src/index.ts` with the hub template paths
 | `wiki(folder)` | One project wiki: its `ProjectWiki` plus every page's `WikiPage` review state |
 | `pulls(force?)` | Open pull requests on GitHub or Azure DevOps against the base branch, each fetched into `refs/okf-pr/<n>` (a GitHub PR from `refs/pull/<n>/head`, an Azure DevOps one from its source branch), mapped to wikis, judged with `judge()`, with checks; 60 s memory cache |
 | `create(request)` | New project wiki: slug the folder, refuse duplicates, clone on `wiki/new-<slug>-<hex>`, scaffold, add the registry row, open the setup PR; a failed open is reported as `prError` and leaves the pending workspace in place |
-| `maintain(folder)` | Reuse the open workspace — including a new wiki still in its setup PR — else a new round on `wiki/<slug>-<stamp>-<hex>`; registers/updates the library entry |
+| `maintain(folder)` | Reuse the open workspace — including a new wiki still in its setup PR — else a new round on `wiki/<slug>-<stamp>-<hex>`; makes sure the workspace has the plugin's `scripts/okf.py`; registers/updates the library entry |
 | `changes(id)` | The files a workspace holds against `origin/<base>`, reviewed/unreviewed, uncommitted count, a suggested PR title and summary |
 | `openPr(id, {title, summary})` | Stamp, toolchain, commit, judge, push, open/update the pull request on GitHub or Azure DevOps, label it, and on Azure DevOps turn auto-complete on or off |
 | `attach(folder)` | Add the base-branch wiki to the library as a read-only local entry |
@@ -83,8 +82,8 @@ It is built by `openTeam(options)` in `src/index.ts` with the hub template paths
 | `setupHub()` | Push the hub skeleton as the first commit of an empty repository |
 | `initialize(folder)` | Open (or reuse) the workspace, check the code out under `.code/<slug>/`, write the read-through task; the client no longer has a button for it |
 | `sync(folder)` | Answer `upToDate` when the code has not moved; otherwise do the read-through on the first usable round, else diff, find affected pages, record the commit in `log.md`, write the sync task |
-| `review(folder, paths)` | Mark listed pages reviewed with the token's account as the reviewer (a `verified` entry, a `stale_after` a fixed period out), then open or update the PR |
-| `wikiAt(path)` | The project wiki whose maintenance workspace holds `path` (its `work/<slug>` folder or anything inside it; case-folded on Windows), so a tool called from that session needs no folder argument |
+| `review(folder, paths)` | Mark listed pages reviewed with the token's account as the reviewer (a `verified` entry, `status: stable`, a `stale_after` a fixed period out, the `needs-review` tag dropped, any legacy `lifecycle` key dropped), then open or update the PR |
+| `wikiAt(path)` | The project wiki whose maintenance workspace holds `path`: an **open round wins** (it may sit in a fallback folder), then the usual `work/<slug>` folder or anything inside it, case-folded on Windows, so a tool called from that session needs no folder argument |
 
 ## Listing project wikis
 
@@ -92,7 +91,7 @@ It is built by `openTeam(options)` in `src/index.ts` with the hub template paths
 
 For each project the list computes `missing` (registered but no folder on the base branch), `published` (`published/Projects/<Project>/` or `<Project>.md` exists, plus the last commit date that touched it), `stats` (from `readWikiPages`: pages, reviewed, unreviewed, overdue) and `code.recorded` (the newest `code_commit` in `log.md` — rotated `archive/log-YYYY.md` files included, newest year first — else a legacy `code_commit` in `SCHEMA.md`, else the commit its pages cite most) [team][codesync]. Review counts are cached per base commit (`statsCache`), so Refresh is the way to see a moved base [team].
 
-`readWikiPages` walks the wiki, skipping `sources/` and `archive/`, skipping a nested folder that holds its own `SCHEMA.md` (a nested wiki is listed separately), and computes each page's `review`, `overdue` (`lifecycle: needs_review` or `stale_after` before today), reviewer and generated stamps [team].
+`readWikiPages` walks the wiki, skipping `sources/` and `archive/`, skipping a nested folder that holds its own `SCHEMA.md` (a nested wiki is listed separately), and computes each page's `review`, `stage`, `overdue` (stage `needs_review`, i.e. a stable page tagged `needs-review`, or `stale_after` before today), reviewer and generated stamps [team].
 
 ## A maintenance round
 
@@ -100,10 +99,16 @@ For each project the list computes `missing` (registered but no folder on the ba
 
 - folder: `work/<wikiSlug(folder with / → -)>` — one folder per project, reused round after round;
 - branch: `wiki/new-<slug>-<hex>` for a new project, else `wiki/<slug>-<YYYYMMDD-HHmm>-<hex>`;
-- if the folder already holds a clone of **this** hub, it fetches the base branch, stashes anything uncommitted (`git stash push --include-untracked`), switches to the new branch from `origin/<base>` and cleans; a clone of another hub is renamed aside, never deleted;
+- if the folder already holds a clone of **this** hub, it fetches the base branch, stashes anything uncommitted (`git stash push --include-untracked`), switches to the new branch from `origin/<base>` and cleans;
+- "this hub" is decided by `sameRemote`, which compares the two URLs after dropping a user name (Azure DevOps clone URLs carry `org@`), a trailing `.git` or `/`, and the case of the host (plus the whole path on Azure DevOps, which treats it case-insensitively); `git@host:path` spellings are normalised too, so a leftover folder with a slightly different `origin` is **reused** rather than set aside [team];
+- a folder of **another hub**, or one whose `origin` cannot be read, is renamed aside to `work/<folder>-old-<date>-<hex>`, never deleted. On Windows that rename fails while anything still holds the folder open (a DSH session or file tab, an editor, a terminal, a git or python process): `renameUnlessLocked` tries the rename up to five times, 250 ms apart (about a second), then leaves the folder alone and this round runs in a fresh `work/<folder>-<date>-<hex>` next to it [team];
 - otherwise it clones `--filter=blob:none --branch <base>` and switches to the new branch;
 - the record gets `entryId: team-<slug>`, so a project has one folder, one DSH workspace and one library entry;
 - `sweepOld` removes the per-round folders older layouts left behind, but only when they hold nothing uncommitted or unpushed [team][readme].
+
+Because a fallback folder is named like the old per-round layout, `sweepOld` is also what eventually removes it, once its pull request is finished and the folder holds nothing unpushed [team].
+
+`ensureToolchain(repo)` then makes sure the workspace can run the toolchain: see [Keeping the hub's toolchain](#keeping-the-hubs-toolchain). It is called whenever a round opens — a reused round, a brand-new one, and New project wiki before `okf.py init` runs — so the session has `scripts/okf.py` from its first turn [team].
 
 `maintain()` first calls `openRecordOf`, which treats a missing `.git` or a merged/closed pull request as the end of the round; otherwise it returns the open record, so pressing Maintain again reopens the same workspace instead of starting a second one [team]. The exported `maintain` is the `openRound` wrapper described under [Sync from code](#sync-from-code), which is what keeps a pending new wiki's setup workspace reachable.
 
@@ -113,13 +118,25 @@ For each project the list computes `missing` (registered but no folder on the ba
 
 `openPr(id, {title, summary})` is the most consequential method. In order [team]:
 
-0. **Reset stale stamps.** For every modified page inside the wiki whose text changed, if it was reviewed before *and* still claims the same review after, it is rewritten with `stampAgentEdit` — `status: draft`, `lifecycle: draft`, `updated`, a fresh `generated`, keeping `verified` as history. The reset list comes back in `stamped`.
-1. **Run the repository's toolchain.** `links`, `index`, `lint`, then one `log` line per changed page (`Creation` / `Update` / `Removal` / `Ingestion`). A lint failure raises `lint-failed` with the linter's output and **nothing is committed or pushed**.
-2. **Commit only what belongs to the wiki PR.** The scope is the wiki folder, the project's `published/Projects/<Project>/` pages and landing page, and `AGENTS.md` only for a new project. Everything else is left out and listed in `notes`. Commits use `user.name`/`user.email` from git when configured, else `team.commitAuthor`, and the message carries a `Wiki-Workspace: <id>` trailer.
+0. **Reset stale stamps.** For every modified page inside the wiki whose text changed, if it was reviewed before *and* still claims the same review after, it is rewritten with `stampAgentEdit` — `status: draft`, `updated`, a fresh `generated`, any legacy `lifecycle` key dropped, keeping `verified` as history. The reset list comes back in `stamped`.
+1. **Run the repository's toolchain** — after making sure it has one (see below). `links`, `index`, `lint`, then one `log` line per changed page (`Creation` / `Update` / `Removal` / `Ingestion`). A lint failure raises `lint-failed` with the linter's output and **nothing is committed or pushed**.
+2. **Commit only what belongs to the wiki PR.** The scope is the wiki folder, the project's `published/Projects/<Project>/` pages and landing page, `AGENTS.md` only for a new project, and `scripts/okf.py` when this round added or refreshed it. Everything else is left out and listed in `notes`. Commits use `user.name`/`user.email` from git when configured, else `team.commitAuthor`, and the message carries a `Wiki-Workspace: <id>` trailer.
 3. **Judge the branch against the base** with `judge(record.wiki, files)`; a missing toolchain script or a missing merge base adds a reason, so the PR needs a person.
 4. **Push and open.** The branch is pushed with the token; on GitHub or Azure DevOps the pull request is opened or updated, and the `wiki-auto-merge` label (a tag on Azure DevOps) is added when eligible and removed when not. On Azure DevOps the Host also sets auto-complete on for an eligible change (squash, delete the source branch) and off when the change needs a person; a failed label or auto-complete call is recorded in `notes` rather than failing the round. Any other git host leaves the branch pushed and says to open the pull request by hand; without a token the same happens with a note naming the token variable.
 
-The PR body (`prBody`) is a table of pages with their review state before and after, the auto-merge verdict or the reasons it needs a person, the review instructions, the lint output in a `<details>` block, the notes, and an HTML comment recording the workspace id and verdict [team].
+The PR body (`prBody`) is a table of pages with their review state before and after, the auto-merge verdict or the reasons it needs a person, the review instructions, the lint output in a `<details>` block, the notes, and an HTML comment recording the workspace id and verdict [team]. The review instructions now read: add `verified`, set `status: stable` (removing a `needs-review` tag) and a `stale_after` date [team].
+
+## Keeping the hub's toolchain
+
+A hub made by hand has no `scripts/okf.py`, and an old hub has an old one. `ensureToolchain(repo)` closes both gaps from the plugin's own `templates/hub/scripts/okf.py` [team]:
+
+- no copy in the workspace → the plugin's is written (`added`);
+- a copy whose `TOOLCHAIN_VERSION` is **lower** than the plugin's, or which declares none → replaced (`updated`);
+- a copy the same version or newer → left alone, so a hub that updated its toolchain by hand keeps it.
+
+`toolchainVersion(source)` reads the constant (`a date such as "2026.11.23"`) and `compareVersions(a, b)` compares dotted parts numerically — both exported, so the versioning rule is testable on its own [team].
+
+It runs at two moments: when a round opens (so the session can run `okf.py` from its first turn, and so New project wiki can seed the full starter `SCHEMA.md` instead of a stub), and again at Open pull request, which then reads `git show origin/<base>:scripts/okf.py` and the workspace copy to decide what changed [team]. A round that added or updated the file puts `scripts/okf.py` in the PR scope and adds a note — "the hub had no `scripts/okf.py`, so this pull request adds the plugin's copy … needs a person once", or the old → new version numbers. Because that file is outside the wiki folder, `judge()` makes the PR need a person, once per hub [team][readme].
 
 ## Sync from code
 
@@ -175,8 +192,9 @@ Recurring failure classes surface as `LibraryError` with a code the client shows
 ## Related pages
 
 - [Automation tasks and the Team Wiki tools](/concepts/automation-tasks.md) — the model tools that call `sync()`, `openPr()` and `wikiAt()`.
+- [Page stages](/concepts/page-stages.md) — how a page's stage is read, and what `overdue` means.
 - [Review state and auto-merge](/concepts/review-and-auto-merge.md) — the `judge()` rule this service calls at step 3.
 - [Azure DevOps hubs and pull requests](/concepts/azure-devops-pull-requests.md) — the other host this service opens pull requests on.
 - [Publishing to the Azure DevOps wiki](/concepts/publish-pipeline.md) — what `publish()` writes.
-- [The OKF toolchain](/concepts/okf-toolchain.md) — the `okf.py` subcommands step 1 runs.
+- [The OKF toolchain](/concepts/okf-toolchain.md) — the `okf.py` subcommands step 1 runs, and its `TOOLCHAIN_VERSION`.
 - [Data model](/concepts/data-model.md) — `MaintainRecord`, `ProjectWiki`, `PullView`.

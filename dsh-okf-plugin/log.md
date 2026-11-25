@@ -1,5 +1,42 @@
 # Bundle Update Log
 
+## 2026-11-25
+* **Ingestion**: [templates/hub/scripts/okf.py key regions at da10648 (excerpt)](/sources/2026-11-25-okf-py-toolchain.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Creation**: [Page Stages — OKF Status and the Derived Review States](/concepts/page-stages.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [Team Wiki Hub Repository](/entities/team-wiki-hub.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [DeepSeek Harness (DSH)](/entities/deepseek-harness.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [Team Wiki Service](/concepts/team-wiki-service.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [Review State and Auto-Merge](/concepts/review-and-auto-merge.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [Publishing to the Azure DevOps Wiki](/concepts/publish-pipeline.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [dsh-okf Plugin — Overview](/concepts/overview.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [The OKF Toolchain (okf.py) and the Hub Template](/concepts/okf-toolchain.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [Host Routes and the Bundle Library](/concepts/host-routes-and-library.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [Data Model and Entities](/concepts/data-model.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [Conventions, Pitfalls and Open Questions](/concepts/conventions-and-pitfalls.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [Build, Run, Test and Deploy](/concepts/build-run-test-deploy.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [The Browser Client](/concepts/browser-client.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [Azure DevOps Hubs and Pull Requests](/concepts/azure-devops-pull-requests.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [Automation Tasks and the Team Wiki Tools](/concepts/automation-tasks.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [Architecture of the dsh-okf Plugin](/concepts/architecture.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [Bundle Schema & Conventions](/SCHEMA.md) — dsh-okf-plugin: adds 1 page, updates 15 pages, captures 1 source
+* **Update**: [Bundle Schema & Conventions](/SCHEMA.md) — status is the only state field: no lifecycle in the template, review stages derived, needs-review in the tag taxonomy
+* **Migration**: dropped the retired lifecycle key from every page and SCHEMA.md with okf.py migrate; the 2026-11-20 captures keep it (captures are immutable)
+* **Creation**: [Page Stages — OKF Status and the Derived Review States](/concepts/page-stages.md) — dsh-okf-plugin: sync wiki to da10648 (drop the lifecycle key, read the stage off OKF status)
+* **Ingestion**: [templates/hub/scripts/okf.py key regions at da10648 (excerpt)](/sources/2026-11-25-okf-py-toolchain.md) — capture the status-only toolchain, TOOLCHAIN_VERSION, migrate and the new lint rules
+* **Update**: [The OKF Toolchain (okf.py) and the Hub Template](/concepts/okf-toolchain.md) — migrate, TOOLCHAIN_VERSION, status-only lint rules, index badges, ensureToolchain
+* **Update**: [Review State and Auto-Merge](/concepts/review-and-auto-merge.md) — reviewed means stage active; the stamp and Mark reviewed drop the lifecycle key and the needs-review tag
+* **Update**: [Team Wiki Service](/concepts/team-wiki-service.md) — sameRemote reuse, locked-folder fallback round, ensureToolchain at round open and at Open pull request
+* **Update**: [Data Model and Entities](/concepts/data-model.md) — status is the only state field, a derived stage on the wire records, the retired key
+* **Update**: [Architecture of the dsh-okf Plugin](/concepts/architecture.md) — add host/stage.ts and the reply-link prefix in knowledge.ts
+* **Update**: [The Browser Client](/concepts/browser-client.md) — catalog filter and state badges read stage, "needs review", the Mark reviewed hint
+* **Update**: [Conventions, Pitfalls and Open Questions](/concepts/conventions-and-pitfalls.md) — no lifecycle key, reply links, toolchain provisioning, a locked workspace folder
+* **Update**: [Publishing to the Azure DevOps Wiki](/concepts/publish-pipeline.md) — skip by derived stage, "Due for re-review" reads stage needs_review
+* **Update**: [Host Routes and the Bundle Library](/concepts/host-routes-and-library.md) — summarize counts stages, the reply-link rule in the prompt context
+* **Update**: [Automation Tasks and the Team Wiki Tools](/concepts/automation-tasks.md) — wikiAt prefers an open round, which may sit in a fallback folder
+* **Update**: [dsh-okf Plugin — Overview](/concepts/overview.md) — derived stages, and each round brings the hub's toolchain current
+* **Update**: [Team Wiki Hub Repository](/entities/team-wiki-hub.md) — the toolchain the plugin writes, the draft rule without a lifecycle key
+* **Sync**: the wiki reflects https://github.com/yishao1224-design/dsh-okf-plugin at `code_commit: da10648a182b38b410d22f952d8e1d973d8825f0` (was b71e34fb1c).
+
 ## 2026-11-23
 * **Creation**: [Automation Tasks and the Team Wiki Tools](/concepts/automation-tasks.md) — dsh-okf-plugin: sync wiki to b71e34f (Team Wiki tools, log.md commit)
 * **Update**: [Team Wiki Hub Repository](/entities/team-wiki-hub.md) — dsh-okf-plugin: sync wiki to b71e34f (Team Wiki tools, log.md commit)

@@ -3,13 +3,12 @@ type: Concept
 title: Conventions, Pitfalls and Open Questions
 description: The coding and workflow conventions this repository follows, the traps a maintainer should know, and what the authors themselves flag as unverified.
 status: draft
-lifecycle: draft
 confidence: medium
 created: 2026-11-20
-updated: 2026-11-23
+updated: 2026-11-25
 tags: []
 sources:
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/README.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/README.md
     id: readme
     title: README.md
   - resource: /sources/2026-11-20-build-script.md
@@ -18,16 +17,16 @@ sources:
   - resource: /sources/2026-11-20-tsconfig.md
     id: tsconfig
     title: tsconfig.json capture
-  - resource: /sources/2026-11-20-okf-py-toolchain.md
+  - resource: /sources/2026-11-25-okf-py-toolchain.md
     id: okf-py
-    title: okf.py key regions
+    title: okf.py key regions at da10648
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/library.ts
     id: library
     title: src/host/library.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/review.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/review.ts
     id: review
     title: src/host/review.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/team.ts
     id: team
     title: src/host/team.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/tools.ts
@@ -42,15 +41,18 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/git.ts
     id: git
     title: src/host/git.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/client/team.tsx
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/client/team.tsx
     id: team-tsx
     title: src/client/team.tsx
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/knowledge.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/knowledge.ts
     id: knowledge
     title: src/host/knowledge.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/stage.ts
+    id: stage
+    title: src/host/stage.ts
 generated:
   by: dsh/agent
-  at: 2026-11-23
+  at: 2026-11-25
 ---
 
 # Conventions, Pitfalls and Open Questions
@@ -77,7 +79,9 @@ generated:
 
 **Chinese is the copy of record.** The `okf` locale namespace takes the Simplified Chinese dictionary as the key-set source of truth, with English kept alongside [readme].
 
-**The team rules are prompt-level.** A maintenance session's context tells the agent to write unreviewed drafts, never write `verified` entries or claim a person as the reviewer, never edit an existing capture, never change `SCHEMA.md` unless asked, never touch `published/` or `AGENTS.md`, treat `.code/` as read-only, and not to commit [readme][knowledge].
+**The team rules are prompt-level.** A maintenance session's context tells the agent to write unreviewed drafts (`status: draft`, no `lifecycle` key — and to remove one it finds on a page it edits), never write `verified` entries or claim a person as the reviewer, never set `status: stable`, tag a stable page it substantially changes `needs-review` instead of inventing a state, never edit an existing capture, never change `SCHEMA.md` unless asked, never touch `published/` or `AGENTS.md`, treat `.code/` as read-only, and not to commit [readme][knowledge].
+
+**A reply links bundle files workspace-relative.** The context computes the bundle root's path from the session's workspace (`replyPrefix`) and tells the agent to link `[SCHEMA.md](<prefix>SCHEMA.md)`, never `/SCHEMA.md`, because the chat resolves links against the workspace rather than the bundle root; `/`-links are only bundle-relative *inside* bundle pages [knowledge].
 
 **Model tools are thin wrappers.** The only tools the Host adds are `wiki_sync_from_code` and `wiki_open_pr`; both validate their own arguments and then call the `Team` service (`sync`, `openPr`, `wikiAt`), so the page and an automation task run the same code. Reading bundles stays with the Harness's own `read`/`grep`/`glob` [team][tools].
 
@@ -99,7 +103,14 @@ generated:
 - **Azure DevOps failures arrive as `github-*` errors.** `host/azure.ts` reuses `GitHubError`, so the Host answers `github-<status>`; a missing or expired PAT — which Azure DevOps answers with a sign-in redirect rather than 401 — becomes `github-401` with a "check DSH_OKF_AZURE_TOKEN" message [team][azure].
 - **Azure DevOps auto-complete waits for branch policies.** The Host turns auto-complete on for an eligible pull request (squash, delete the source branch), but a required reviewer policy or a failing build validation still holds the merge: on that host "eligible" means "may complete itself once the policies pass", not "merges now" [readme][team].
 - **The GitHub Enterprise API path is derived from the host** (`https://<host>/api/v3`), so setting `team.githubHost` without `team.githubApi` is usually enough — but a proxy or a non-standard install needs both [readme].
-- **`scripts/okf.py` must exist in the hub** for a PR to be linted and logged; without it the branch is still pushed but the PR is marked as needing a person [team].
+- **The plugin brings the hub's toolchain, once per hub.** A hub made by hand has no `scripts/okf.py` and an old hub has an old one: `ensureToolchain` writes the plugin's `templates/hub/scripts/okf.py` into the round's workspace when the hub's copy is missing, declares no `TOOLCHAIN_VERSION`, or declares a lower one, and Open pull request carries the file in the scope with a note naming both versions. Because that file is outside the wiki folder, `judge()` makes that one pull request need a person [team][okf-py][readme].
+- **A hand-updated hub is never downgraded.** A copy whose `TOOLCHAIN_VERSION` equals or exceeds the plugin's is left alone, so a hub that bumped its own toolchain keeps it — and a plugin rolled back will not overwrite it either [team].
+- **Without a hub template there is nothing to run.** When `options.hubTemplate` is absent or holds no `okf.py`, the toolchain is not copied; the branch is still pushed but the PR is marked as needing a person, because `lint` did not run [team].
+- **A locked workspace folder starts a fallback round.** On Windows a leftover `work/<folder>` of another hub cannot always be renamed aside — an open DSH session or file tab, an editor, a terminal, a git or python process holds it. The plugin retries `EBUSY`/`EPERM`/`EACCES` for about a second, then leaves the folder alone and runs the round in `work/<folder>-<date>-<hex>`; `wikiAt` checks open rounds first, so the tools and the library still find that folder, and `sweepOld` removes it once its pull request is finished [team][readme].
+- **A workspace is reused only when `origin` still names this hub.** `sameRemote` ignores a user name (`org@` on Azure DevOps clone URLs), a trailing `.git` or `/`, and case where the host ignores it; anything else — including an `origin` that cannot be read — counts as another hub, whose folder is renamed aside rather than reused [team].
+- **A legacy `lifecycle` key lingers until someone migrates.** `lint` warns on every page that still carries it and errors only when its value disagrees with `status`; `python scripts/okf.py migrate --bundle <folder>` (or `--dry-run` first) folds it into `status` + the `needs-review` tag, and an agent edit or Mark reviewed drops it one page at a time [okf-py][review].
+- **`migrate` leaves the captures alone, so lint keeps warning about them.** It skips `sources/` because captures are immutable [okf-py]: after a full migration the only legacy `lifecycle` warnings left are the historical capture pages, which is expected — a capture is a snapshot of a commit, and rewriting one is never the fix. A *new* capture can simply be written without the key.
+- **A `needs-review` tag on a draft does nothing.** The stage derivation checks `stable` first, and `archived` needs *both* `status: deprecated` and the `archive/` folder; a draft tagged for review is still a draft, and a page under `archive/` with another status is a lint warning [stage][okf-py].
 - **`okf.py init` writes outside the new folder** (it re-syncs skill copies), so New project wiki reverts everything outside the wiki folder — and swallows a revert failure [team].
 - **The `.code/` checkout is excluded through `.git/info/exclude`,** not `.gitignore`, so it never appears as a change; a reused clone is only reused when its `remote.origin.url` still matches [team].
 - **The Team Wiki tools are global, not per bundle.** They are registered for every session (unless `tools: false`), so they appear even where no team wiki is connected; a call then fails saying to connect one, and they only ever act on the hub's project wikis [readme][tools].
@@ -125,6 +136,7 @@ These are the authors' own "not verified yet" items plus what this survey found 
 
 ## Related pages
 
+- [Page stages](/concepts/page-stages.md) — the derivation behind several of the pitfalls above.
 - [Review state and auto-merge](/concepts/review-and-auto-merge.md) — the mechanical rules behind several pitfalls.
 - [Build, run, test, deploy](/concepts/build-run-test-deploy.md) — the commands to reproduce or check any of this.
 - [Team Wiki service](/concepts/team-wiki-service.md) — the code most of the runtime pitfalls come from.

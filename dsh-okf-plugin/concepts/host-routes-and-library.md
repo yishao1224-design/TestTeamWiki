@@ -3,10 +3,9 @@ type: Concept
 title: Host Routes and the Bundle Library
 description: The Host entry's twenty-four /api/okf routes, error mapping, the library.json store, and the git and bundle-reading modules behind it.
 status: draft
-lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-23
+updated: 2026-11-25
 tags: []
 sources:
   - resource: /sources/2026-11-20-readme.md
@@ -24,7 +23,7 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/src/host/azure.ts
     id: azure
     title: src/host/azure.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/types/okf.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/types/okf.ts
     id: types
     title: src/types/okf.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/library.ts
@@ -33,21 +32,24 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/git.ts
     id: git
     title: src/host/git.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/bundle.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/bundle.ts
     id: bundle
     title: src/host/bundle.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/frontmatter.ts
     id: frontmatter
     title: src/host/frontmatter.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/knowledge.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/knowledge.ts
     id: knowledge
     title: src/host/knowledge.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/stage.ts
+    id: stage
+    title: src/host/stage.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/run.ts
     id: run
     title: src/host/run.ts
 generated:
   by: dsh/agent
-  at: 2026-11-23
+  at: 2026-11-25
 ---
 
 # Host Routes and the Bundle Library
@@ -165,7 +167,7 @@ A failed clone removes its temp folder, so nothing is left behind [library][read
 
 - A folder is a **bundle root** when it holds a `SCHEMA.md`, or an `index.md` whose frontmatter declares `okf_version`.
 - `index.md` and `log.md` are reserved (no `type` needed); `.git`, `node_modules`, `.obsidian`, `.github`, `.claude` and `.vscode` are never walked.
-- `summarize()` lists up to `PAGE_CAP = 5000` markdown pages, counts pages per `type` and per `lifecycle`/`status`, records pages without a `type`, and reads `okf_version` from the root `index.md`.
+- `summarize()` lists up to `PAGE_CAP = 5000` markdown pages, counts pages per `type` and per **stage** (derived by `pageStage`, falling back to `status` when a page states no usable state), records pages without a `type`, and reads `okf_version` from the root `index.md` [bundle][stage].
 - `resolvePage()` refuses anything that is not a `.md` inside the bundle or that contains `..`/`.git`; `readPage()` refuses files over `PAGE_BYTES_CAP = 2 MB`.
 
 `src/host/frontmatter.ts` is a deliberately small reader: scalar keys, inline lists, block lists of scalars, and the odd inline map. Nested mappings (`sources`, `generated`, `verified`) are recorded as `undefined` rather than guessed, and a page whose frontmatter it cannot read still appears without metadata [frontmatter]. That is why the preview shows flat fields only; review state is computed by a separate reader in `host/review.ts` (see [Review state and auto-merge](/concepts/review-and-auto-merge.md)).
@@ -178,10 +180,13 @@ A failed clone removes its temp folder, so nothing is left behind [library][read
 - describes the origin (a local mirror of a URL at a commit / a clone being edited / the project wiki in a maintenance workspace / a plain folder) and whether this session may edit it — `editableHere` requires `entry.workspace` and a session `cwd` that contains the bundle root [knowledge];
 - appends the edit rules (generic OKF rules, or the Team Wiki's stricter team rules), and the `index.md` **body** (frontmatter stripped) truncated to `indexChars` [knowledge].
 
+The text also tells the agent **how to link** bundle files. `replyPrefix(root, cwd)` computes the bundle root's path from the session's workspace with a trailing slash — `''` when the workspace *is* the bundle root — so the intro cites pages as `<prefix>concepts/foo.md`, and a reply is told to link `[SCHEMA.md](<prefix>SCHEMA.md)` rather than `/SCHEMA.md`: the chat resolves links against the workspace, not the bundle root, so a leading-slash link is not found. A workspace that does not hold the bundle gets the absolute root as the prefix [knowledge]. Two related lines state that *inside bundle pages* links starting with `/` are bundle-relative, and that a page tagged `needs-review`, past its `stale_after`, or with `status: deprecated` should be flagged in the answer [knowledge].
+
 The context text callback must be synchronous, so `IndexCache` keeps each bundle's `index.md` in memory and re-reads it only when its modification time moves — which is how the catalog follows an agent's own edits on the next turn [knowledge].
 
 ## Related pages
 
 - [Architecture](/concepts/architecture.md) — where these modules sit.
+- [Page stages](/concepts/page-stages.md) — what `summarize()` counts.
 - [Team Wiki service](/concepts/team-wiki-service.md) — the routes from `/api/okf/team` onward.
 - [Data model](/concepts/data-model.md) — `LibraryEntry`, `BundleSummary`, `PageSummary` and the library file.

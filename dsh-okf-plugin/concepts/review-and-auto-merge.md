@@ -3,13 +3,12 @@ type: Concept
 title: Review State and Auto-Merge
 description: How a page counts as reviewed, how an agent edit resets it, and the eligibility rule that decides whether a wiki pull request may merge without a person.
 status: draft
-lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-23
+updated: 2026-11-25
 tags: []
 sources:
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/README.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/README.md
     id: readme
     title: README.md
   - resource: /sources/2026-11-20-hub-agents-template.md
@@ -21,10 +20,13 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/examples/wiki-auto-complete-ado.yml
     id: ci-ado-auto-complete
     title: examples/wiki-auto-complete-ado.yml
-  - resource: /sources/2026-11-20-okf-py-toolchain.md
+  - resource: /sources/2026-11-25-okf-py-toolchain.md
     id: okf-py
-    title: okf.py key regions
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/review.ts
+    title: okf.py key regions at da10648
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/stage.ts
+    id: stage
+    title: src/host/stage.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/review.ts
     id: review
     title: src/host/review.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/eligibility.ts
@@ -44,7 +46,7 @@ sources:
     title: src/host/team.ts
 generated:
   by: dsh/agent
-  at: 2026-11-23
+  at: 2026-11-25
 ---
 
 # Review State and Auto-Merge
@@ -53,30 +55,31 @@ generated:
 
 The bundle carries no "reviewed" flag. A page is **reviewed** when all three hold [review][readme]:
 
-1. `lifecycle: active`;
+1. its stage is `active` — that is `status: stable` without the `needs-review` tag, or, on a page that still carries the retired key, `lifecycle: active` [stage];
 2. the last entry of `verified:` names a person — its `by` value starts with the `human` actor kind — with an `at` date;
 3. that verification is not older than `generated.at` — i.e. nobody rewrote the page after the person confirmed it.
 
-Everything else is **unreviewed**. "Overdue" is a separate idea used by the Team Wiki list: `lifecycle: needs_review`, or a `stale_after` date before today [readme].
+Everything else is **unreviewed**. "Overdue" is a separate idea used by the Team Wiki list: stage `needs_review` (a stable page tagged `needs-review`), or a `stale_after` date before today [readme][team].
 
-`reviewState(source)` reads this out of the frontmatter text: it splits the page at its `---` fences, groups lines by top-level key so nested blocks stay with their key, parses `generated` and `verified` in either flow style (`{by: x, at: y}`) or block style, and compares dates as text after truncating to 10 characters [review]. It returns `{ state, lifecycle, reviewer, reviewedAt, generatedBy, generatedAt }`, and `describeReview` renders it for the PR table (`reviewed by alice on 2026-08-27`, or `unreviewed, written by dsh/agent on …`) [review].
+`reviewState(source)` reads this out of the frontmatter text: it splits the page at its `---` fences, groups lines by top-level key so nested blocks stay with their key, reads `status` and a legacy `lifecycle` plus the `tags` list (`[a, b]`, `- a` block or a bare scalar), derives the stage through the shared `pageStage`, parses `generated` and `verified` in either flow style (`{by: x, at: y}`) or block style, and compares dates as text after truncating to 10 characters [review][stage]. It returns `{ state, stage, reviewer, reviewedAt, generatedBy, generatedAt }`, and `describeReview` renders it for the PR table (`reviewed by alice on 2026-08-27`, `unreviewed, written by dsh/agent on …`, followed by `, needs review` when the stage says so) [review].
 
 ## The agent-edit stamp
 
-An agent cannot make a page reviewed; it can only make it unreviewed. `stampAgentEdit(source, agent, date)` rewrites exactly four top-level keys and leaves every other key alone [review]:
+An agent cannot make a page reviewed; it can only make it unreviewed. `stampAgentEdit(source, agent, date)` rewrites these top-level keys and leaves every other key alone [review]:
 
 ```yaml
 status: draft
-lifecycle: draft
 updated: <date>
 generated:
   by: <agent>
   at: <date>
 ```
 
-It adds `created: <date>` when the page has none, keeps `verified` (it is history) and keeps comments and blank lines that trailed a replaced value [review]. `today()` returns the local `YYYY-MM-DD` [review].
+It **drops a legacy `lifecycle` key** while doing so, adds `created: <date>` when the page has none, keeps `verified` (it is history) and keeps comments and blank lines that trailed a replaced value [review]. `today()` returns the local `YYYY-MM-DD` [review].
 
-The Team Wiki service calls this in two places: Open pull request resets any reviewed page that was edited without resetting its own stamp, and New project wiki / Maintain rely on the session's rules, which instruct the agent to write `generated` itself [readme][team].
+Mark reviewed is the other side: `markReviewed(source, reviewer, date, staleAfter)` appends `{ by: human:<id>, at: <date> }` to `verified`, sets `status: stable`, `stale_after` and `updated`, drops a legacy `lifecycle` key, and **removes the `needs-review` tag** from `tags` while keeping every other tag [review].
+
+The Team Wiki service calls the stamp in two places: Open pull request resets any reviewed page that was edited without resetting its own stamp, and New project wiki / Maintain rely on the session's rules, which instruct the agent to write `generated` itself with `status: draft` and no `lifecycle` key [readme][team].
 
 ## The eligibility rule
 
@@ -142,7 +145,7 @@ Auto-complete itself is not set by the pipeline: the Host turns it on (squash, d
 
 ## Companion: lint
 
-Eligibility says what a person must see; `okf.py lint` says whether the bundle is well formed. Open pull request runs the repository's own `links`, `index` and `lint` before committing, and a lint error aborts the whole operation (`lint-failed`, nothing committed or pushed) [team]. The linter's frontmatter, lifecycle, tag, link and orphan rules are described in [The OKF toolchain](/concepts/okf-toolchain.md).
+Eligibility says what a person must see; `okf.py lint` says whether the bundle is well formed. Open pull request runs the repository's own `links`, `index` and `lint` before committing, and a lint error aborts the whole operation (`lint-failed`, nothing committed or pushed) [team]. The linter's frontmatter, status, tag, link and orphan rules are described in [The OKF toolchain](/concepts/okf-toolchain.md), and the status/tag/folder derivation it shares with `reviewState` in [Page stages](/concepts/page-stages.md).
 
 ## Suggested PR titles and summaries
 
@@ -150,6 +153,7 @@ Eligibility says what a person must see; `okf.py lint` says whether the bundle i
 
 ## Related pages
 
+- [Page stages](/concepts/page-stages.md) — the status / tag / folder derivation this rule builds on.
 - [Team Wiki service](/concepts/team-wiki-service.md) — where `judge()` and the stamp are applied.
 - [Azure DevOps hubs and pull requests](/concepts/azure-devops-pull-requests.md) — auto-complete and the Azure build-validation guard.
 - [Data model](/concepts/data-model.md) — the `verified` / `generated` field shapes.

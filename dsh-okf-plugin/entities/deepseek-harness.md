@@ -3,7 +3,6 @@ type: Entity
 title: DeepSeek Harness (DSH)
 description: The host application the plugin runs inside — its plugin bundles, Host services, client slots and workspace services.
 status: draft
-lifecycle: draft
 confidence: high
 created: 2026-11-20
 updated: 2026-11-23
