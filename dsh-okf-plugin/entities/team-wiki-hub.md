@@ -3,18 +3,23 @@ type: Entity
 title: Team Wiki Hub Repository
 description: The single git repository that holds every project's OKF bundle, the AGENTS.md registry, the shared toolchain and the published pages.
 status: draft
-lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-23
+updated: 2026-11-25
 tags: []
 sources:
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/README.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/README.md
     id: readme
     title: README.md
   - resource: /sources/2026-11-20-hub-agents-template.md
     id: hub-agents
-    title: templates/hub/AGENTS.md capture
+    title: templates/hub/AGENTS.md capture at 95b0615
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/templates/hub/AGENTS.md
+    id: hub-agents-src
+    title: templates/hub/AGENTS.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/templates/hub/scripts/okf.py
+    id: okf-src
+    title: templates/hub/scripts/okf.py
   - resource: /sources/2026-11-20-wiki-auto-merge-workflow.md
     id: ci-auto-merge
     title: examples/wiki-auto-merge.yml capture
@@ -32,7 +37,7 @@ sources:
     title: src/host/registry.ts
 generated:
   by: dsh/agent
-  at: 2026-11-23
+  at: 2026-11-25
 ---
 
 # Team Wiki Hub Repository
@@ -45,7 +50,7 @@ A single git repository — GitHub, GitHub Enterprise or Azure Repos for the pul
 team-wiki/
 ├── AGENTS.md                 rules for agents + the project registry table
 ├── README.md
-├── scripts/okf.py            the shared toolchain
+├── scripts/okf.py            the shared toolchain (TOOLCHAIN_VERSION inside)
 ├── skills/kb-*               shared skills (optional)
 ├── <project>/                one OKF bundle per project
 │   ├── SCHEMA.md  index.md  log.md
@@ -55,6 +60,8 @@ team-wiki/
     ├── <Project>.md
     └── <Project>/…
 ```
+
+`scripts/okf.py` is the one file the plugin also **writes**: when a maintenance round opens, `ensureToolchain` adds the plugin's `templates/hub/scripts/okf.py` if the hub has none or has an older `TOOLCHAIN_VERSION`, and the round's pull request carries it [readme][okf-src]. A hub that keeps its own copy current is left alone.
 
 `team.root` decides where bundles are looked for when `AGENTS.md` has no registry: blank means the repository root; `okf` supports the older `okf/<project>` layout or a single-bundle repository [readme].
 
@@ -69,16 +76,16 @@ team-wiki/
 
 ## Rules encoded in the repository
 
-The skeleton `AGENTS.md` states the working agreement [hub-agents]: agents read `<Bundle>/index.md` and follow `SCHEMA.md`; every page an agent writes is an unreviewed draft; `verified` entries and reviewer ids naming a person are for people; existing captures are never edited; `okf.py lint` runs before a change is proposed; a pull request touches one project only; `published/Projects/` is generated and must not be hand-edited.
+The skeleton `AGENTS.md` states the working agreement [hub-agents-src]: agents read `<Bundle>/index.md` and follow `SCHEMA.md`; every page an agent writes is an unreviewed draft — `status: draft`, `generated: { by, at }`, and "there is no `lifecycle` key"; `verified` entries and reviewer ids naming a person are for people; existing captures are never edited; `okf.py lint` runs before a change is proposed; a pull request touches one project only; `published/Projects/` is generated and must not be hand-edited.
 
 ## One project per pull request
 
-A maintenance round clones the hub into `<library>/team/work/<slug>` on a `wiki/…` branch, edits only the project's bundle (plus its published pages), commits only that scope, and opens a pull request on GitHub or Azure DevOps. CI maps the changed files back through the registry and requires exactly one project; a change under `published/` or to `AGENTS.md` always needs a person [readme][ci-auto-merge]. On Azure Repos the guard is a required Build validation (`examples/wiki-auto-complete-ado.yml`): the Host turns auto-complete on for an eligible pull request, and the pipeline turns it off again for one that needs a person [readme][ci-ado-auto-complete].
+A maintenance round clones the hub into `<library>/team/work/<slug>` on a `wiki/…` branch, edits only the project's bundle (plus its published pages), commits only that scope — plus `scripts/okf.py` when that round brought the toolchain — and opens a pull request on GitHub or Azure DevOps. CI maps the changed files back through the registry and requires exactly one project; a change under `published/`, to `AGENTS.md` or to the toolchain always needs a person [readme][ci-auto-merge]. On Azure Repos the guard is a required Build validation (`examples/wiki-auto-complete-ado.yml`): the Host turns auto-complete on for an eligible pull request, and the pipeline turns it off again for one that needs a person [readme][ci-ado-auto-complete].
 
 ## How it is created and changed
 
 - **Set up the hub** fills an empty repository with the skeleton, the checker and the three example workflows as the first commit of the base branch; it refuses if the repository has any branch [readme].
-- **New project wiki** scaffolds a bundle with `okf.py init`, writes `wiki_name`, adds the registry row, and opens the setup as the first pull request [readme].
+- **New project wiki** scaffolds a bundle with `okf.py init`, writes `wiki_name`, adds the registry row, and opens the setup as the first pull request; a hub made by hand without `scripts/okf.py` first gets the plugin's copy in that same pull request, so the wiki starts from the full starter `SCHEMA.md` [readme].
 - **Maintain** and **Sync from code** (whose first round is the Initialize read-through) change it only through `wiki/…` branches [readme].
 - **A scheduled automation task** can run the last two through the Team Wiki model tools — `wiki_sync_from_code`, then `wiki_open_pr` after the pages are updated — so a pull request appears without anyone at the page; a person still reviews it [readme].
 - **Publish** writes `published/Projects/…` into the same pull request, and after a merge the ADO sync workflow mirrors that folder into the Azure DevOps wiki's `Projects/` section [ci-ado].
@@ -89,5 +96,6 @@ A code sync records the commit the wiki now reflects in the project's `log.md`, 
 
 - [Team Wiki service](/concepts/team-wiki-service.md) — the code that operates on this repository.
 - [Publishing to the Azure DevOps wiki](/concepts/publish-pipeline.md) — the output side.
+- [Page stages](/concepts/page-stages.md) — what a page's status means in this hub.
 - [Review state and auto-merge](/concepts/review-and-auto-merge.md) — the rule that lets agent PRs merge.
 - [DeepSeek Harness](/entities/deepseek-harness.md) — the host that drives it.

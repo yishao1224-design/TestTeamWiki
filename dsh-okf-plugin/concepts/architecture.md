@@ -3,10 +3,9 @@ type: Concept
 title: Architecture of the dsh-okf Plugin
 description: The two halves of the plugin, the components inside each, how they talk to each other, and where state lives on disk.
 status: draft
-lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-23
+updated: 2026-11-25
 tags: []
 sources:
   - resource: /sources/2026-11-20-readme.md
@@ -24,15 +23,18 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/types/contract.ts
     id: contract
     title: src/types/contract.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/types/okf.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/types/okf.ts
     id: types
     title: src/types/okf.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/library.ts
     id: library
     title: src/host/library.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/team.ts
     id: team
     title: src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/stage.ts
+    id: stage
+    title: src/host/stage.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/tools.ts
     id: tools
     title: src/host/tools.ts
@@ -44,7 +46,7 @@ sources:
     title: src/client/store.ts
 generated:
   by: dsh/agent
-  at: 2026-11-23
+  at: 2026-11-25
 ---
 
 # Architecture of the dsh-okf Plugin
@@ -81,10 +83,11 @@ Host modules and their jobs:
 | `host/library.ts` | `library.json`, `repos/<id>/`, fetch / update / add-local / remove / edit-workspace, per-session selections |
 | `host/bundle.ts` | Bundle-root detection, catalog summary, safe page reads (path-traversal guards, page and byte caps) |
 | `host/frontmatter.ts` | A dependency-free YAML-frontmatter reader for flat keys and scalar lists |
-| `host/knowledge.ts` | The per-session prompt context, the `index.md` cache, editing rules |
-| `host/team.ts` | The Team Wiki service: project list, pull requests, Maintain, New project wiki, Open pull request, Sync from code (first round = the Initialize read-through), Set up the hub, Publish |
+| `host/knowledge.ts` | The per-session prompt context, the `index.md` cache, editing rules, and the workspace-relative path a reply should link a bundle file by |
+| `host/team.ts` | The Team Wiki service: project list, pull requests, Maintain, New project wiki, Open pull request, Sync from code (first round = the Initialize read-through), Set up the hub, Publish, and the hub toolchain check |
 | `host/tools.ts` | The model tools `wiki_sync_from_code` and `wiki_open_pr`, so an automation task can run Sync from code and Open pull request without the page; they call `team.sync()`, `team.openPr()` and `team.wikiAt()` |
-| `host/review.ts` | Reviewed / unreviewed from frontmatter; the agent-edit stamp; frontmatter text surgery |
+| `host/stage.ts` | A page's review stage read off OKF v0.2 `status`, the `needs-review` tag and `archive/` — one rule shared by the catalog, review state, publishing, the Team Wiki list and `lib/check-pr.js` |
+| `host/review.ts` | Reviewed / unreviewed from the stage and the `verified` entries; the agent-edit stamp; frontmatter text surgery |
 | `host/eligibility.ts` | The auto-merge rule, shared by the Host and `lib/check-pr.js` |
 | `host/registry.ts` | The hub's `AGENTS.md` project-registry table (parse and append) |
 | `host/github.ts` | The few GitHub REST calls (open/update PR, label, list PRs, checks, state) |

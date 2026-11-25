@@ -3,42 +3,44 @@ type: Concept
 title: Data Model and Entities
 description: The records the plugin stores — bundle frontmatter, library.json, team.json, work records and wire DTOs — and the invariants that hold them together.
 status: draft
-lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-23
+updated: 2026-11-25
 tags: []
 sources:
   - resource: /sources/2026-11-20-readme.md
     id: readme
     title: README at 95b0615
-  - resource: /sources/2026-11-20-okf-py-toolchain.md
+  - resource: /sources/2026-11-25-okf-py-toolchain.md
     id: okf-py
-    title: okf.py key regions
+    title: okf.py key regions at da10648
   - resource: /sources/2026-11-20-hub-agents-template.md
     id: hub-agents
     title: templates/hub/AGENTS.md capture
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/types/okf.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/types/okf.ts
     id: types
     title: src/types/okf.ts
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/library.ts
     id: library
     title: src/host/library.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/team.ts
     id: team
     title: src/host/team.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/bundle.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/bundle.ts
     id: bundle
     title: src/host/bundle.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/review.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/review.ts
     id: review
     title: src/host/review.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/codesync.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/stage.ts
+    id: stage
+    title: src/host/stage.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/codesync.ts
     id: codesync
     title: src/host/codesync.ts
 generated:
   by: dsh/agent
-  at: 2026-11-23
+  at: 2026-11-25
 ---
 
 # Data Model and Entities
@@ -68,22 +70,32 @@ The fields the plugin and toolchain read and write [readme][okf-py]:
 | `type` | Required; must appear in SCHEMA.md's type registry, and the page must sit in that type's folder (`archive/` exempt) |
 | `title` | Human title; the published wiki file name is derived from it |
 | `description` | One sentence, used by `index.md` and the catalog |
-| `status` | OKF v0.2 standard: `draft \| stable \| deprecated` |
-| `lifecycle` | This bundle's five-state extension: `draft \| active \| needs_review \| deprecated \| archived`; must agree with `status` |
+| `status` | OKF v0.2 standard, and the **only** state field: `draft \| stable \| deprecated`. The five review stages are derived from it (see below) |
 | `confidence` | `low \| medium \| high` (optional) |
 | `created`, `updated` | Dates |
-| `stale_after` | Required once `lifecycle: active`; a past date means overdue review |
+| `stale_after` | Required once `status: stable`; a past date means overdue review |
 | `superseded_by` | Required (or a `## Deprecation` section) for `deprecated` |
-| `tags` | List from SCHEMA.md's tag taxonomy |
+| `tags` | List from SCHEMA.md's tag taxonomy; `needs-review` on a stable page asks for a re-check |
 | `sources[]` | `{ resource, id, title, last_modified?, blob? }` — `resource` required, ids unique; a bundle-relative `/sources/…` capture or a document-relative live file; `blob` is a pinned git blob sha |
 | `generated` | `{ by, at }` — what produced the page (a person's `human` actor kind plus id, `<tool>/<version>`, `process:<id>`) |
 | `verified[]` | `{ by, at }` — appended only by a real re-check; an entry whose actor kind is `human` is what makes a page reviewed |
+| `lifecycle` *(retired)* | The old five-state extension key. Still read when present (`draft \| active \| needs_review \| deprecated \| archived`, mapped to `status` as before), an agent edit or Mark reviewed drops it, and `okf.py migrate` folds it out of a whole wiki [okf-py] |
 
-The status/lifecycle mapping is fixed: `draft → draft`, `active → stable`, `needs_review → stable`, `deprecated → deprecated`, `archived → deprecated` [okf-py].
+The stage is derived, never stored [stage]:
+
+| Stage | Frontmatter |
+|---|---|
+| `draft` | `status: draft` |
+| `active` | `status: stable` |
+| `needs_review` | `status: stable` + the `needs-review` tag |
+| `deprecated` | `status: deprecated` |
+| `archived` | `status: deprecated` under `archive/` |
+
+An overdue `stale_after` is counted by the callers (the Team Wiki list's `overdue`, `okf.py`'s `review_due`), not by `pageStage` itself [stage][okf-py]. See [Page stages](/concepts/page-stages.md) for the full rule.
 
 ### Derived review state
 
-There is no stored "reviewed" field. `reviewState` derives it from `lifecycle`, the last `verified` entry and `generated.at` [review]. See [Review state and auto-merge](/concepts/review-and-auto-merge.md).
+There is no stored "reviewed" field. `reviewState` derives it from the stage (via `pageStage`), the last `verified` entry and `generated.at` [review][stage]. See [Review state and auto-merge](/concepts/review-and-auto-merge.md).
 
 ### Hub extension keys
 
@@ -172,11 +184,11 @@ The Host and browser share these in `src/types/okf.ts` [types]:
 |---|---|---|
 | `FetchRequest`, `AddLocalRequest` | browser → Host | URL / ref / path / id / name, or a local path |
 | `EditWorkspaceAnswer` | Host → browser | the now-editable entry, the workspace folder, `created` |
-| `BundleSummary` | Host → browser | entry, `okfVersion`, `pages[]` (`PageSummary`), `types{}`, `states{}`, `untyped[]`, `truncated` |
+| `BundleSummary` | Host → browser | entry, `okfVersion`, `pages[]` (`PageSummary` with `status`, `stage`, `tags`, `reserved`), `types{}`, `states{}` (a count per **stage**, falling back to `status` when no stage can be read), `untyped[]`, `truncated` |
 | `PageContent` | Host → browser | path, parsed `meta`, body |
 | `TeamStatus` | Host → browser | team config, base branch, commit, `empty`, `wikis[]` (`ProjectWiki`), `maintains[]`, `hasToken` |
 | `ProjectWiki` | Host → browser | folder, name, registered, repo/summary/owner, missing, published, stats, maintainId, code state |
-| `WikiDetail` | Host → browser | the `ProjectWiki` plus `WikiPage[]` with review state |
+| `WikiDetail` | Host → browser | the `ProjectWiki` plus `WikiPage[]` (`stage`, `review`, `reviewer`, `reviewedAt`, `generatedBy`, `generatedAt`, `overdue`, `staleAfter`) |
 | `PullsAnswer` | Host → browser | `pulls[]` (`PullView`), `at`, `note`, `statusChanged` |
 | `PullView` | Host → browser | number, title, url, author, draft, branch, labels, wikis, checks, eligible, reasons, files, maintainId |
 | `ChangesAnswer` | Host → browser | the record, changed files with review state, uncommitted count, suggested PR text |
@@ -212,13 +224,14 @@ team.json ──team──▶ hub repository
 | A page path never escapes the bundle | `resolvePage()` [bundle] |
 | A wiki PR carries one project only | `judge()` prefix check and `check-pr.js`'s one-wiki rule [readme] |
 | Captures are immutable | `judge()` rejects modified/deleted `sources/` files [readme] |
-| Only a person makes a page reviewed | `reviewState` requires a `human` actor kind; the agent stamp never writes `verified` [review] |
+| Only a person makes a page reviewed | `reviewState` requires stage `active` and a `human` actor kind; the agent stamp writes `status: draft` and never `verified` [review][stage] |
 | Published pages are generated | `renderBundle` is deterministic; the PR always needs a person [readme] |
 | The base branch only changes through a PR | every write goes to a `wiki/…` branch, pushed and opened as a PR [team] |
 | A sync's commit does not by itself need a person | recorded in the bundle's `log.md`, an allowed file for `judge()`, not in `SCHEMA.md` [codesync][team] |
 
 ## Related pages
 
+- [Page stages](/concepts/page-stages.md) — the derivation table in full, and who computes it.
 - [Host routes and the bundle library](/concepts/host-routes-and-library.md) — where `library.json` is written.
 - [Team Wiki service](/concepts/team-wiki-service.md) — where `team.json` and maintenance records are written.
 - [Review state and auto-merge](/concepts/review-and-auto-merge.md) — the derivation rule.

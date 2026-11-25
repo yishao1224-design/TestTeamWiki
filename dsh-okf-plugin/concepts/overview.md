@@ -3,13 +3,12 @@ type: Concept
 title: dsh-okf Plugin — Overview
 description: What the dsh-okf DeepSeek Harness plugin is for, who uses it, and the main flows it supports.
 status: draft
-lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-23
+updated: 2026-11-25
 tags: []
 sources:
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/README.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/README.md
     id: readme
     title: README.md
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/ec5a774e593070c87dcca36c96a5012481f280c0/package.json
@@ -32,7 +31,7 @@ sources:
     title: examples/wiki-auto-complete-ado.yml
 generated:
   by: dsh/agent
-  at: 2026-11-23
+  at: 2026-11-25
 ---
 
 # dsh-okf Plugin — Overview
@@ -56,8 +55,8 @@ Three audiences share the same surfaces:
 1. **Fetch and update** a bundle into a local library, with sparse, blobless git clones so a large monorepo costs little more than the bundle [readme].
 2. **Preview**: stats, a filterable catalog, a page reader, and in-place navigation between pages [readme].
 3. **Attach a bundle to a session** through a system-prompt context named `okf:session-bundle`; the plugin registers no bundle-reading tools on purpose — its only tools are the two Team Wiki ones below [readme][host-entry].
-4. **Run the team wiki**: registry-driven project list, review counts, Maintain / New project wiki / Publish / Open pull request, with an auto-merge rule (Azure DevOps auto-complete for a hub there) that CI re-checks before a merge [readme].
-5. **Bootstrap a wiki from code and keep it in step** with Sync from code: its first usable round checks the code repository out read-only under `.code/<folder>/` and prefills a read-through task, later rounds prefill the update task for the pages the changed files affect; the recorded code commit lives in the wiki's `log.md` [readme].
+4. **Run the team wiki**: registry-driven project list, review counts and a Needs-review queue read off each page's OKF `status` (the five stages are derived, never stored — see [Page stages](/concepts/page-stages.md)), Maintain / New project wiki / Publish / Open pull request, with an auto-merge rule (Azure DevOps auto-complete for a hub there) that CI re-checks before a merge [readme].
+5. **Bootstrap a wiki from code and keep it in step** with Sync from code: its first usable round checks the code repository out read-only under `.code/<folder>/` and prefills a read-through task, later rounds prefill the update task for the pages the changed files affect; the recorded code commit lives in the wiki's `log.md` [readme]. Each round also makes sure the hub has a current `scripts/okf.py`, adding or refreshing the plugin's copy when the hub's is missing or older [readme].
 6. **Let a scheduled automation task do the upkeep.** The model gets `wiki_sync_from_code` and `wiki_open_pr`, so a DSH automation task in the project's maintenance workspace can check for new code, do the update task, and open or update the pull request without anyone at the page; a page someone reviewed still waits for a person [readme][host-entry].
 
 ## Main flows at a glance
@@ -91,5 +90,6 @@ Nothing is imported from, or written into, a DSH source checkout: the contract s
 ## Related pages
 
 - [Architecture](/concepts/architecture.md) — components, how they talk, where data lives.
+- [Page stages](/concepts/page-stages.md) — the status/tag/folder model the review counts come from.
 - [Review state and auto-merge](/concepts/review-and-auto-merge.md) — the rule that decides what a person must see.
 - [Conventions, pitfalls and open questions](/concepts/conventions-and-pitfalls.md) — what the code expects and what is still unverified.

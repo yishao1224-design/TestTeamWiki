@@ -3,10 +3,9 @@ type: Concept
 title: Publishing to the Azure DevOps Wiki
 description: How a project bundle is rendered into published/Projects pages for an Azure DevOps wiki, and how a merge mirrors them there.
 status: draft
-lifecycle: draft
 confidence: high
 created: 2026-11-20
-updated: 2026-11-20
+updated: 2026-11-25
 tags: []
 sources:
   - resource: /sources/2026-11-20-readme.md
@@ -15,18 +14,21 @@ sources:
   - resource: /sources/2026-11-20-wiki-publish-ado-workflow.md
     id: ci-ado
     title: examples/wiki-publish-to-ado.yml capture
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/publish.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/publish.ts
     id: publish
     title: src/host/publish.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/team.ts
     id: team
     title: src/host/team.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/95b0615aefbbd4d1e16040efdd37d1e1884e5ed0/src/host/review.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/review.ts
     id: review
     title: src/host/review.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/stage.ts
+    id: stage
+    title: src/host/stage.ts
 generated:
   by: dsh/agent
-  at: 2026-11-20
+  at: 2026-11-25
 ---
 
 # Publishing to the Azure DevOps Wiki
@@ -48,7 +50,7 @@ Skipped, with a reason recorded in `skipped` [publish]:
 | `index.md`, `log.md`, `SCHEMA.md`, any nested `index.md` | bundle bookkeeping |
 | anything under `sources/` | raw source capture |
 | anything under `archive/` | archived |
-| a page whose `lifecycle` (or `status`) is `deprecated` or `archived` | that value |
+| a page whose derived stage is `deprecated` or `archived` — that is `status: deprecated`, on or off `archive/` | that stage [publish][stage] |
 
 A non-markdown file is skipped silently (its reason `not markdown` is not reported), and the root `index.md` becomes the landing page rather than a skipped page [publish].
 
@@ -68,8 +70,8 @@ Folder segments are title-cased first (`concepts` → `Concepts`, `how-to` → `
 Each page drops its frontmatter and gets a review line under its first heading [publish]:
 
 - `> Reviewed by <reviewer> on <date>.` when `reviewState` says reviewed;
-- `> **Due for re-review.** …` when the lifecycle is `needs_review`;
-- `> **Unreviewed.** Written by <generated.by> on <date>; a person has not checked it yet.` otherwise.
+- `> **Due for re-review.** …` when the page's stage is `needs_review` — a stable page carrying the `needs-review` tag;
+- `> **Unreviewed.** Written by <generated.by> on <date>; a person has not checked it yet.` otherwise [publish][stage].
 
 The page ends with a footer linking back to the hub file (`<hubWeb>/blob/<branch>/<folder>/<path>`) and telling the reader to edit the bundle there, not the page [publish].
 
@@ -123,5 +125,6 @@ The README's own "not verified yet" list says published pages have **not** been 
 ## Related pages
 
 - [Team Wiki service](/concepts/team-wiki-service.md) — the `publish()` wrapper and `openPr()`.
+- [Page stages](/concepts/page-stages.md) — the stage the skip rule and the re-review line read.
 - [Review state and auto-merge](/concepts/review-and-auto-merge.md) — why `published/` always needs a person.
 - [Data model](/concepts/data-model.md) — the published path layout.

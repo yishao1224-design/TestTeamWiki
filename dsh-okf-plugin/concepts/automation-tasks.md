@@ -3,13 +3,12 @@ type: Concept
 title: Automation Tasks and the Team Wiki Tools
 description: The two model tools wiki_sync_from_code and wiki_open_pr that let a DSH automation task keep a project wiki in step with its code, how they pick a wiki, and what they answer.
 status: draft
-lifecycle: draft
 confidence: high
 created: 2026-11-23
-updated: 2026-11-23
+updated: 2026-11-25
 tags: []
 sources:
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/README.md
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/README.md
     id: readme
     title: README.md
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/tools.ts
@@ -21,10 +20,10 @@ sources:
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/types/contract.ts
     id: contract
     title: src/types/contract.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/src/host/team.ts
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/src/host/team.ts
     id: team
     title: src/host/team.ts
-  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/scripts/hub-smoke.mjs
+  - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/da10648a182b38b410d22f952d8e1d973d8825f0/scripts/hub-smoke.mjs
     id: hub-smoke
     title: scripts/hub-smoke.mjs
   - resource: https://github.com/yishao1224-design/dsh-okf-plugin/blob/b71e34fb1c76d88af680440531fda3c5a9c75c34/scripts/harness-check.mjs
@@ -32,7 +31,7 @@ sources:
     title: scripts/harness-check.mjs
 generated:
   by: dsh/agent
-  at: 2026-11-23
+  at: 2026-11-25
 ---
 
 # Automation Tasks and the Team Wiki Tools
@@ -57,7 +56,7 @@ The Team Wiki page runs **Sync from code** and **Open pull request** when a pers
 Both tools take an optional `folder`, the wiki folder in the hub (for example `payments`). `wikiOf()` resolves it in this order [tools]:
 
 1. **the named folder**, with leading and trailing slashes trimmed; it must be one of the connected hub's non-missing project wikis, else the call fails listing the wikis there are;
-2. **the session's workspace**: when `exec.agent.session.header.cwd` is inside a project wiki's maintenance folder, `team.wikiAt(cwd)` names that wiki. `wikiAt` compares canonical paths against `<libraryDir>/team/work/<slug>` and its subfolders, case-folded on Windows, over the project wikis on the base branch plus the folders with a maintenance record [team];
+2. **the session's workspace**: when `exec.agent.session.header.cwd` is inside a project wiki's maintenance folder, `team.wikiAt(cwd)` names that wiki. `wikiAt` first checks the **open rounds** — a round can sit in a fallback folder (`work/<folder>-<date>-<hex>`) when the usual one was locked at open time — and only then compares canonical paths against `<libraryDir>/team/work/<slug>` and its subfolders, case-folded on Windows, over the project wikis on the base branch plus the folders with a maintenance record [team];
 3. **the only project wiki**, when the hub has exactly one;
 4. otherwise the call fails and asks for `folder`, listing the choices.
 

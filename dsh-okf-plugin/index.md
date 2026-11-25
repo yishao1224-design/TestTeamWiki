@@ -4,7 +4,7 @@ okf_version: "0.2"
 
 # Bundle Index
 
-* [Bundle Schema & Conventions](SCHEMA.md) - Authoritative conventions for this OKF bundle — types, tags, frontmatter templates, lifecycle rules.
+* [Bundle Schema & Conventions](SCHEMA.md) - Authoritative conventions for this OKF bundle — types, tags, frontmatter templates, review rules.
 
 # Concepts
 
@@ -15,11 +15,12 @@ okf_version: "0.2"
 * [Conventions, Pitfalls and Open Questions](concepts/conventions-and-pitfalls.md) - The coding and workflow conventions this repository follows, the traps a maintainer should know, and what the authors themselves flag as unverified.
 * [Data Model and Entities](concepts/data-model.md) - The records the plugin stores — bundle frontmatter, library.json, team.json, work records and wire DTOs — and the invariants that hold them together.
 * [Host Routes and the Bundle Library](concepts/host-routes-and-library.md) - The Host entry's twenty-four /api/okf routes, error mapping, the library.json store, and the git and bundle-reading modules behind it.
+* [Page Stages — OKF Status and the Derived Review States](concepts/page-stages.md) - How a page's lifecycle stage is read off OKF v0.2 status, the needs-review tag and the archive/ folder, what each stage means, and where the plugin and okf.py compute it.
 * [Publishing to the Azure DevOps Wiki](concepts/publish-pipeline.md) - How a project bundle is rendered into published/Projects pages for an Azure DevOps wiki, and how a merge mirrors them there.
 * [Review State and Auto-Merge](concepts/review-and-auto-merge.md) - How a page counts as reviewed, how an agent edit resets it, and the eligibility rule that decides whether a wiki pull request may merge without a person.
 * [Team Wiki Service](concepts/team-wiki-service.md) - The team.ts Host service that lists a hub's project wikis, runs maintenance rounds, opens pull requests and bootstraps or syncs wikis from code.
 * [The Browser Client](concepts/browser-client.md) - The plugin's browser half — its slots, one store, the chip/dialog/team page components, the safe markdown renderer and the inline style table.
-* [The OKF Toolchain (okf.py) and the Hub Template](concepts/okf-toolchain.md) - The stdlib-only Python toolchain the hub carries — init, lint, index, links, log, stats, drift — and the template files Set up the hub writes.
+* [The OKF Toolchain (okf.py) and the Hub Template](concepts/okf-toolchain.md) - The stdlib-only Python toolchain the hub carries — init, lint, index, links, log, stats, migrate, drift — its TOOLCHAIN_VERSION, and the template files Set up the hub writes.
 * [dsh-okf Plugin — Overview](concepts/overview.md) - What the dsh-okf DeepSeek Harness plugin is for, who uses it, and the main flows it supports.
 
 # Entities
@@ -37,4 +38,5 @@ okf_version: "0.2"
 * [package.json at 95b0615 (verbatim)](sources/2026-11-20-package-manifest.md) - The bundle manifest: name, exports, published file list, npm scripts, the dsh.bundle.patch and dsh.client declarations, and dev dependencies.
 * [templates/hub/AGENTS.md at 95b0615 (verbatim)](sources/2026-11-20-hub-agents-template.md) - The hub skeleton's AGENTS.md: rules for agents and the empty project registry table that Set up the hub writes.
 * [templates/hub/scripts/okf.py key regions (excerpt)](sources/2026-11-20-okf-py-toolchain.md) - Excerpts of the shared toolchain that ships with the hub: its subcommands, the status/lifecycle mapping, and the lint rules that give the bundle its conventions.
+* [templates/hub/scripts/okf.py key regions at da10648 (excerpt)](sources/2026-11-25-okf-py-toolchain.md) - Excerpts of the shared toolchain after the lifecycle key was retired: the status-only model, TOOLCHAIN_VERSION, review_due, the lint rules, the new migrate subcommand and the seeded SCHEMA.md text.
 * [tsconfig.json at 95b0615 (verbatim)](sources/2026-11-20-tsconfig.md) - TypeScript settings: ES2022 target, bundler resolution, react-jsx, strict flags including exactOptionalPropertyTypes, no emit, src only.
